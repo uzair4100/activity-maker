@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Activity maker</title>
+    <link rel="stylesheet" href="index.css" />
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="bootstrap.min.css" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" crossorigin="anonymous" />
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div id="wrapper">
+
+            <!--find path-->
+            <div id="paths" class="mt-1 mb-3">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <button id="chooseFile" class="btn-outline-secondary" type="button">Choose Folder</button>
+                    </div>
+                    <input id="filePath" type="text" class="form-control text-bold" placeholder="Path for activity" />
+                    <div class="input-group-append">
+                        <button id="load" class="btn btn-primary" type="button">Load Activity</button>
+                    </div>
+                </div>
+            </div>
+
+            <!--===================Activity Type===========================-->
+            <div class="d-flex justify-content-start align-items-start mb-2">
+                <div class="h5 mr-3">Activity Type:</div>
+                <select class="form-select form-select-sm" id="activityType">
+                <option selected>-----------------</option>
+                <option value="1" id="selectitem">Select Item</option>
+                <option value="2">Sentence Builder</option>
+                <option value="3">Vertical Arrange</option>
+                <option value="4">Horizontal Arrange</option>
+                <option value="5">Multiple Choice</option>
+                <option value="6">Drag Category</option>
+            </select>
+            </div>
+
+            <!--==================structure======================================-->
+            <div id="structure_wrapper" class="d-flex justify-content-center align-items-start">
+                <div class="h4 mr-3">Structure:</div>
+                <div id="structure" class="d-flex justify-content-between flex-column align-items-start border border-dark rounded px-5 py-2 mb-2 w-100">
+                    <div id="clue" class="d-flex justify-content-between">
+                        <div class="h5 mr-3">Clue</div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="clue_text" />
+                            <label class="form-check-label" for="clue_text">Text</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="clue_audio" />
+                            <label class="form-check-label" for="clue_audio">Audio</label>
+                        </div>
+                    </div>
+                    <!--end clue-->
+
+                    <div id="options" class="d-flex justify-content-between">
+                        <div class="h5 mr-3">Options</div>
+
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="options_text" />
+                            <label class="form-check-label" for="options_text">Text</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="options_audio" />
+                            <label class="form-check-label" for="options_audio">Audio</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="options_image" />
+                            <label class="form-check-label" for="options_image">Image</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="options_random" />
+                            <label class="form-check-label" for="options_random">Random</label>
+                        </div>
+                    </div>
+                    <!--end options-->
+
+                    <div id="onCorrect" class="d-flex justify-content-between">
+                        <div class="h5 mr-3">On Correct</div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="onCorrect_audio" />
+                            <label class="form-check-label" for="onCorrect_audio">Audio</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="onCorrect_settext" />
+                            <label class="form-check-label" for="onCorrect_settext">Set Text</label>
+                        </div>
+                    </div>
+                    <!--end onCorrect-->
+                </div>
+                <!--end structure-->
+            </div>
+            <!--end structure wrapper-->
+
+            <!--===============================Quiz======================================-->
+            <div id="quiz_wrapper" class="d-flex justify-content-center align-items-end flex-column">
+                <div class="d-flex w-100">
+                    <div class="h4 mr-3" id="quizzes">Quizzes:</div>
+                    <div id="quiz_container" class="d-flex justify-content-between flex-column align-items-start w-100">
+                        <!--quiz will load here-->
+                    </div>
+                    <!--end quiz-->
+                </div>
+            </div>
+            <!--end quiz wrapper-->
+            <!--add blank or duplicate-->
+            <div class="d-flex justify-content-end mt-1">
+                <button id="help" class="btn btn-success mr-2">Help</button>
+                <button id="addQuiz" class="btn btn-secondary mr-2">Add blank quiz</button>
+                <button id="duplicate" class="btn btn-info">duplicate quiz</button>
+            </div>
+
+            <!--buttons-->
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <button class="btn btn-primary btn-lg" id="submit">Update</button>
+                <!--status-->
+                <div id="status" class="alert alert-success" role="alert"></div>
+                <button class="btn btn-danger" id="clear">Clear</button>
+            </div>
+        </div>
+        <!--End wrapper -->
+    </div>
+    <!--End container-->
+
+    <!--==============================================TEMPLATES====================================================================-->
+    <!--===========================================================================================================================-->
+    <div id="templates">
+        <div class="w-100 p-0 quiz selectitem">
+            <div class="bg-dark text-white w-100 d-flex justify-content-between px-1 heading">
+                <div class="no">1</div>
+                <div class="del_quiz">X</div>
+            </div>
+            <div class="border border-dark px-5 mb-2 w-100">
+                <div class="input-group m-1">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Clue Text</span>
+                    </div>
+                    <input id="clueText" type="text" class="form-control" value="" />
+                </div>
+                <div class="h6 mr-3">Options</div>
+                <div class="w-100 m-0 p-0 quiz_options">
+                    <div class="input-group mt-1 option">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">
+                                <input type="radio" name="option" class="option_radio" />
+                            </div>
+                        </div>
+                        <input type="text" class="form-control option_value" />
+                        <button class="del">X</button>
+                    </div>
+                </div>
+                <img class="addOption" src="https://img.icons8.com/metro/30/000000/plus.png" />
+            </div>
+        </div>
+
+        <div class="w-100 p-0 verticalarrange">
+            <div class="px-5 mb-2 w-100">
+                <div class="w-100 m-0 p-0 quiz_options">
+                    <div class="input-group my-2 option">
+                        <div class="d-flex w-100">
+                            <div class="input-group">
+                                <!--<input type="text" class="form-control option_value">
+                                <input type="text" class="form-control option_value">-->
+                                <textarea class="form-control option_value" rows="3"></textarea>
+                                <textarea class="form-control option_value" rows="3"></textarea>
+                            </div>
+                            <button class="del">X</button>
+                        </div>
+                    </div>
+                </div>
+                <img class="addOption" src="https://img.icons8.com/metro/30/000000/plus.png" />
+            </div>
+        </div>
+
+        <div class="w-100 p-0 horizontalarrange">
+            <div class="px-5 mb-2 w-100">
+                <div class="w-100 m-0 p-0 quiz_options">
+                    <div class="input-group my-2 option">
+                        <div class="d-flex w-100">
+                            <div class="input-group">
+                                <!--<input type="text" class="form-control option_value">-->
+                                <textarea class="form-control option_value" rows="2"></textarea>
+                            </div>
+                            <button class="del">X</button>
+                        </div>
+                    </div>
+                </div>
+                <img class="addOption" src="https://img.icons8.com/metro/30/000000/plus.png" />
+            </div>
+        </div>
+
+        <div class="w-100 p-0 quiz sentencebuilder">
+            <div class="bg-dark text-white w-100 d-flex justify-content-between px-1 heading">
+                <div class="no">1</div>
+                <div class="del_quiz">X</div>
+            </div>
+            <div class="border border-dark px-5 mb-2 w-100">
+                <div class="input-group m-1">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Sentence</span>
+                    </div>
+                    <input id="clueText" type="text" class="form-control sentence" value="" />
+                </div>
+                <div class="h6 mr-3">Options</div>
+                <div class="w-100 m-0 p-0 quiz_options">
+                    <div class="input-group mt-1 option">
+                        <input type="text" class="form-control option_value" />
+                        <button class="del">X</button>
+                    </div>
+                </div>
+                <img class="addOption" src="https://img.icons8.com/metro/30/000000/plus.png" />
+            </div>
+        </div>
+
+        <div class="w-100 p-0 quiz multiplechoice">
+            <div class="bg-dark text-white w-100 d-flex justify-content-between px-1 heading">
+                <div class="no">1</div>
+                <div class="del_quiz">X</div>
+            </div>
+            <div class="border border-dark px-5 mb-2 w-100">
+                <div class="input-group m-1">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Clue Text</span>
+                    </div>
+                    <input id="clueText" type="text" class="form-control" value="" />
+                </div>
+                <div class="h6 mr-3">Options</div>
+                <div class="w-100 m-0 p-0 quiz_options">
+                    <div class="input-group mt-1 option">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">
+                                <input type="radio" name="option" class="option_radio" />
+                            </div>
+                        </div>
+                        <input type="text" class="form-control option_value" />
+                        <button class="del">X</button>
+                    </div>
+                </div>
+                <img class="addOption" src="https://img.icons8.com/metro/30/000000/plus.png" />
+            </div>
+        </div>
+
+        <div class="w-100 p-0 mb-2 border border-dark quiz dragcategory">
+            <div class="bg-dark text-white w-100 d-flex justify-content-between px-1 heading">
+                <div class="no">1</div>
+                <div class="del_quiz">X</div>
+            </div>
+            <div class="px-5 mb-2 w-100">
+                <div class="w-100 m-0 p-0 quiz_options">
+                    <div class="input-group my-2 option">
+                        <div class="h6">Column</div>
+                        <div class="d-flex w-100">
+                            <div class="input-group">
+                                <textarea class="form-control option_value" rows="5"></textarea>
+                            </div>
+                            <button class="del">X</button>
+                        </div>
+                    </div>
+                </div>
+                <img class="addOption" src="https://img.icons8.com/metro/30/000000/plus.png" />
+            </div>
+        </div>
+    </div>
+    <!--end twmplate-->
+    <!--==============================================END TEMPLATES====================================================================-->
+    <!--==================================================================================================================-->
+
+    <script type="text/javascript" src="index.js"></script>
+    <script type="text/javascript" src="modules.js"></script>
+    <!--<script type="text/javascript" src="jquery-ui.min.js"></script>-->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+
+
+</body>
+
+</html>

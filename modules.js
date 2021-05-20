@@ -1,0 +1,724 @@
+function loadSB(contentXML) {
+    return new Promise(function(resolve, reject) {
+
+        let fileContent = fs.readFileSync(contentXML, "utf-8");
+        let $ = cheerio.load(fileContent, { xmlMode: true, decodeEntities: false });
+        let data = "";
+
+        $("frame:not(:eq(0))").each(function(i) {
+            let template = new DOMParser().parseFromString(sentencebuilderQuiz, "text/html");
+            // !$("item[type=sentenceButtons]").length ? reject("Invalid Activity Type") : ""; //reject if not sententce builder
+            let no = i + 1;
+            let optns = $(this).find("option");
+            let opt = "";
+            let clueText = $(this).find("item[type=sentenceButtons]").attr("sentence");
+            //set options
+            optns.each(function() {
+                let optionTemplate = new DOMParser().parseFromString(template.querySelector(".quiz_options").innerHTML, "text/html");
+
+                let optText = $(this).text().trim();
+                console.log(optText)
+                optionTemplate.querySelector(".option_value").setAttribute("value", optText);
+                opt += optionTemplate.body.innerHTML;
+            }); //end option loop
+
+            template.querySelector(".quiz_options").innerHTML = opt;
+            template.querySelector("#clueText").setAttribute("value", clueText);
+            template.querySelector(".no").innerHTML = no;
+
+            data += template.body.innerHTML;
+        }); //end outer loop
+
+        if (data) {
+            //console.log(data);
+            quizContainer.innerHTML = data;
+            resolve("loaded");
+        } else {
+            reject("Could not load activity!")
+        }
+    })
+} //end loadSB
+
+function updateSB(XML) {
+    //change dom value
+    optionValue = quizContainer.querySelectorAll("input[type=text]");
+    for (let i = 0; i < optionValue.length; i++) {
+        optionValue[i].setAttribute("value", optionValue[i].value);
+    }
+
+    let template = new DOMParser().parseFromString(XML, "application/xml");
+    console.log(template)
+
+    let actName = filePath.split("\\");
+    let name = actName[6] + " " + actName[8] + "/" + actName[9];
+    let quizzes = new DOMParser().parseFromString(quizContainer.innerHTML, "text/html")
+
+    let quizzesArray = quizzes.querySelectorAll(".sentencebuilder");
+
+    let data = "",
+        content = "";
+    //loop through quizzes
+    for (let i = 0; i < quizzesArray.length; i++) {
+        let quiz = quizzesArray[i];
+        let clueText = quiz.querySelector("#clueText").getAttribute("value");
+        let clue = "";
+        let no = i + 2;
+        let opt = "",
+            values = [];
+
+        //loop through options
+        let options = quiz.querySelectorAll(".option_value");
+        console.log(options)
+            //add all option values in one array
+        for (let j = 0; j < options.length; j++) {
+
+            let opt_text = options[j].getAttribute("value").trim();
+            if (opt_text.length) {
+                (opt_text.includes("*")) ? values = values.concat(opt_text.split("*")): values.push(opt_text);
+            }
+        }
+        values.filter(val => typeof(val) !== undefined && val != "").map((val, v) => opt += `<option sym="opt_${v}">${val.trim()}</option>`);
+
+        let frameContent = `<frame num="${no}">
+                                <action type="playSound" file="prompt.mp3"></action>
+                                <action type="show" sym="btnCheck" />
+                                <action type="show" sym="btnClear" />
+                                <item type="sentenceButtons" randomise="yes" sentenceTextBox="sentenceText"  sentence="${clueText}" markSym="mark" >
+                                    <textbox sym="sentenceText" />
+                                    <clearButton sym="btnClear" />
+                                    <checkButton sym="btnCheck"/>
+                                    ${opt}
+                                </item>
+                                <action type="waitTest"></action>
+                                <action type="hide" sym="btnCheck" />
+                                <action type="hide" sym="btnClear" />
+                                <action type="delay" secs="1.5"/>
+                            </frame>${"\n\n"}`;
+        console.log(frameContent)
+        data += frameContent;
+    } //end loop
+    console.log(data)
+    data = prettifyXml(data, { indent: 4 })
+    template.querySelector("activity").innerHTML = name;
+    template.querySelector("end").insertAdjacentHTML("beforebegin", data);
+    content = new XMLSerializer().serializeToString(template);;
+    return content;
+} //end updateSB function
+
+///////////////////////////////////////Select Item//////////////////////////////////////////////////////////////////////////
+function loadSI(contentXML) {
+    return new Promise(function(resolve, reject) {
+
+            let fileContent = fs.readFileSync(contentXML, "utf-8");
+            let $ = cheerio.load(fileContent, { xmlMode: true, decodeEntities: false });
+            let data = "";
+            // document.querySelector("#onCorrect_audio")
+            //find randomise option
+            $("action[type=randomiseChoices]").length ? document.querySelector("#options_random").checked = true : "";
+            //find play audio
+            $("passed").children("action[type=playSound]").length ? document.querySelector("#onCorrect_audio").checked = true : "";
+
+            //  !$("passed").length ? reject("Invalid Activity Type") : ""; //reject if not select item
+
+            $("frame:not(:eq(0))").each(function(i) {
+                let template = new DOMParser().parseFromString(selectitemQuiz, "text/html");
+
+                let no = i + 1;
+                let clueText = $(this).find("action[type=setText]").html();
+                let optns = $(this).find("item[type=choiceFrames]");
+                let opt = "";
+                !clueText ? clueText = "" : "";
+                //set options
+                optns.each(function() {
+                    let optionTemplate = new DOMParser().parseFromString(template.querySelector(".quiz_options").innerHTML, "text/html");
+
+                    optText = $(this).text().trim();
+                    //console.log(optText)
+                    optionTemplate.querySelector(".option_value").setAttribute("value", optText);
+                    optionTemplate.querySelector(".option_radio").setAttribute("name", no);
+
+                    $(this).attr("correctFrame") ? optionTemplate.querySelector(".option_radio").setAttribute("checked", true) : optionTemplate.querySelector(".option_radio").removeAttribute("checked");
+                    // $(this).attr("correctFrame") ? console.log("correct") : console.log("wrong");
+
+                    // console.log(optionTemplate.body.innerHTML)
+                    opt += optionTemplate.body.innerHTML;
+                }); //end option loop
+
+                template.querySelector(".quiz_options").innerHTML = opt;
+                template.querySelector("#clueText").setAttribute("value", clueText);
+
+                data += template.body.innerHTML;
+            }); //end outer loop
+
+            if (data) {
+                //console.log(data);
+                quizContainer.innerHTML = data;
+                resolve("loaded");
+            } else {
+                reject("Could not load activity!")
+            }
+        }) //return 
+}
+
+
+function updateSI(XML) {
+    //change dom value
+    optionValue = quizContainer.querySelectorAll("input[type=text]");
+    for (let i = 0; i < optionValue.length; i++) {
+        optionValue[i].setAttribute("value", optionValue[i].value);
+    }
+    let radios = quizContainer.querySelectorAll("input[type=radio]");
+    for (let i = 0; i < radios.length; i++) {
+        radios[i].checked ? radios[i].setAttribute("checked", true) : radios[i].removeAttribute("checked");
+    }
+
+    let template = new DOMParser().parseFromString(XML, "application/xml");
+    console.log(template)
+
+    let actName = filePath.split("\\");
+    let name = actName[6] + " " + actName[8] + "/" + actName[9];
+    let quizzes = new DOMParser().parseFromString(quizContainer.innerHTML, "text/html")
+
+    let quizzesArray = quizzes.querySelectorAll(".selectitem");
+
+    let data = "",
+        content = "";
+    //loop through quizzes
+    for (let i = 0; i < quizzesArray.length; i++) {
+        let quiz = quizzesArray[i];
+        let clueText = quiz.querySelector("#clueText").getAttribute("value").trim();
+        let clue = "";
+        clueText.length ? clue = `<action type="setText" tbox="clueTxt">${clueText}</action>` : clue = "";
+
+        let randomise = "",
+            playAudio = "",
+            sound = "";
+        parseInt(i + 1) < 10 ? sound = `s00${i+1}` : sound = `s0${i+1}`;
+        document.getElementById("options_random").checked == true ? (randomise = `<action type="randomiseChoices" />`) : randomise = "";
+        document.getElementById("onCorrect_audio").checked == true ? (playAudio = `<action type="delay" secs="0.5"/><action type="playSound" wait="yes" file="${sound}.mp3"></action>`) : playAudio = "";
+        let opt = "",
+            values = [];
+
+        //loop through options
+        let options = quiz.querySelectorAll(".option");
+        console.log(options)
+        let correct = "";
+        //add all option values in one array
+        for (let j = 0; j < options.length; j++) {
+
+            let opt_text = options[j].querySelector(".option_value").getAttribute("value").trim();
+            let opt_radio = options[j].querySelector(".option_radio");
+            opt_radio.hasAttribute("checked") ? correct = opt_text : "";
+            console.log(correct);
+            if (opt_text.length) {
+                (opt_text.includes("*")) ? values = values.concat(opt_text.split("*")): values.push(opt_text);
+            }
+        }
+
+        values.filter(val => typeof(val) !== undefined && val != "").map((val, v) => {
+            let correctFrame = "";
+            val.trim() == correct.trim() ? correctFrame = ` correctFrame ="1"` : "";
+            opt += `<item type="choiceFrames" sym="opt_${v}"${correctFrame}>${val.trim()}</item>`
+        });
+
+        let frameContent = `<frame num="${i + 2}">
+                        <item type="button" btn="btnCheck" >
+                            <action type="validateChoices">
+                            <passed>
+                                <action type="showChoicesFeedback"/>
+                                <action type="hide" sym="btnCheck" />${playAudio}
+                                <action type="delay" secs="1"/>
+                                <action type="nextFrame"></action>
+                            </passed>
+                                <failed>
+                                    <action type="playSound" file="wrong.mp3" wait="no"></action>
+                                    <action type="showChoicesFeedback"/>
+                                </failed>
+                            </action>
+                        </item>                       
+                        ${opt}${randomise}                     
+                        ${clue}
+                        <action type="playSound" file="prompt.mp3" wait="yes"></action>
+                        <action type="waitTest"></action>
+                        <action type="delay" secs="1"/>
+                    </frame>${"\n\n"}`;
+
+        data += frameContent;
+    } //end loop
+    data = prettifyXml(data, { indent: 4 })
+    template.querySelector("activity").innerHTML = name;
+    template.querySelector("end").insertAdjacentHTML("beforebegin", data);
+    content = new XMLSerializer().serializeToString(template);;
+    return content;
+} //end updateSI function
+
+//=================================================Vertical Arrange======================================================================//
+//=======================================================================================================================================//
+function loadVA(contentXML) {
+    return new Promise(function(resolve, reject) {
+
+        let fileContent = fs.readFileSync(contentXML, "utf-8");
+        let $ = cheerio.load(fileContent, { xmlMode: true, decodeEntities: false });
+        let quiz = "",
+            data = "";
+        let template = new DOMParser().parseFromString(verticalarrangeQuiz, "text/html");
+        let quizTemplate = new DOMParser().parseFromString(template.querySelector(".option").outerHTML, "text/html");
+
+        //  !$("questions").attr("randomise_left_column") ? reject("Invalid Activity Type") : ""; //check for vertical arrange template
+
+        $("quiz").each(function(i) {
+            let inputs = quizTemplate.querySelectorAll(".option_value");
+            //get value of quiz fields
+            let left = $(this).children("left").text();
+            let right = $(this).children("right").text();
+
+            inputs[0].innerHTML = left;
+            inputs[1].innerHTML = right;
+
+            quiz += quizTemplate.body.innerHTML;
+        }); //end outer loop
+
+        template.querySelector(".quiz_options").innerHTML = quiz;
+        template.querySelector(".quiz_options").insertAdjacentHTML("beforebegin", `<div class="d-flex justify-content-around"><h6>Left Column</h6><h6>Right Column</h6></div>`)
+        data = template.body.innerHTML;
+        console.log(data);
+
+        if (data) {
+            //console.log(data);
+            quizContainer.innerHTML = data;
+            resolve("loaded");
+        } else {
+            reject("Could not load activity!")
+        }
+    });
+} //end loadVA
+
+function updateVA(XML) {
+    //change dom value
+    optionValue = quizContainer.querySelectorAll(".option_value");
+    for (let i = 0; i < optionValue.length; i++) {
+        optionValue[i].innerHTML = optionValue[i].value;
+    }
+
+    let template = new DOMParser().parseFromString(XML, "application/xml");
+    console.log(template);
+    let actName = filePath.split("\\");
+    let name = actName[6] + " " + actName[8] + "/" + actName[9];
+    let quizzes = new DOMParser().parseFromString(quizContainer.innerHTML, "text/html")
+    let quizzesArray = quizzes.querySelectorAll(".option");
+    console.log(quizzesArray)
+
+    let data = "",
+        content = "";
+    //loop through quizzes
+    for (let i = 0; i < quizzesArray.length; i++) {
+        let quiz = quizzesArray[i],
+            opt = "";
+
+        //loop through options
+        let options = quiz.querySelectorAll(".option_value");
+        let left = options[0].innerHTML.trim();
+        let right = options[1].innerHTML.trim();
+
+        opt = `<quiz><left>${left}</left><right>${right}</right></quiz>`;
+
+        data += opt;
+    } //end loop
+    data = prettifyXml(data, { indent: 2 })
+    template.querySelector("activity").innerHTML = name;
+    template.querySelector("questions").innerHTML = data;
+    content = new XMLSerializer().serializeToString(template);;
+    return content;
+
+} //end updateVA function
+
+//=================================================Horizontal Arrange======================================================================//
+//=======================================================================================================================================//
+function loadHA(contentXML) {
+    return new Promise(function(resolve, reject) {
+
+        let fileContent = fs.readFileSync(contentXML, "utf-8");
+        let $ = cheerio.load(fileContent, { xmlMode: true, decodeEntities: false });
+        let quiz = "",
+            data = "";
+        let template = new DOMParser().parseFromString(horizontalarrangeQuiz, "text/html");
+        let quizTemplate = new DOMParser().parseFromString(template.querySelector(".option").outerHTML, "text/html");
+        let onCorrect_audio = document.getElementById("onCorrect_audio");
+
+        //   !$("questions").attr("textwidthfiddle") ? reject("Invalid Activity Type") : ""; //check for horizontal arrange template 
+        $("quiz").attr("audio") != "silence.mp3" ? document.querySelector("#onCorrect_audio").checked = true : "" //check audio button if no silence file
+
+        console.log(template);
+        console.log(quizTemplate);
+        $("quiz").each(function(i) {
+            let inputs = $(this).text(); //get text of quiz  
+            inputs = inputs.replace(/\]\[/g, '] ['); //keep space after each closing bracket to make it readable
+
+            quizTemplate.querySelector(".option_value").innerHTML = inputs;
+
+            quiz += quizTemplate.body.innerHTML;
+        }); //end outer loop
+
+        template.querySelector(".quiz_options").innerHTML = quiz;
+        data = template.body.innerHTML;
+        console.log(data);
+
+        if (data) {
+            //console.log(data);
+            quizContainer.innerHTML = data;
+            resolve("loaded");
+        } else {
+            reject("Could not load activity!")
+        }
+        // resolve()
+    });
+} //end loadHA
+
+function updateHA(XML) {
+    //change dom value
+    optionValue = quizContainer.querySelectorAll(".option_value");
+    for (let i = 0; i < optionValue.length; i++) {
+        optionValue[i].innerHTML = optionValue[i].value;
+    }
+
+    let template = new DOMParser().parseFromString(XML, "application/xml");
+    console.log(template);
+    let actName = filePath.split("\\");
+    let name = actName[6] + " " + actName[8] + "/" + actName[9];
+    let quizzes = new DOMParser().parseFromString(quizContainer.innerHTML, "text/html");
+    console.log(quizzes)
+    let quizzesArray = quizzes.querySelectorAll(".option");
+    console.log(quizzesArray)
+
+    let data = "",
+        content = "";
+    //loop through quizzes
+    for (let i = 0; i < quizzesArray.length; i++) {
+        let input_value = "",
+            quiz = "",
+            sound = "",
+            stop = "";
+
+        if (document.getElementById("onCorrect_audio").checked) {
+            parseInt(i + 1) < 10 ? sound = `s00${i+1}.mp3` : sound = `s0${i+1}.mp3`;
+        } else { sound = "silence.mp3"; }
+
+        //loop through options
+        input_value = quizzesArray[i].querySelector(".option_value").innerHTML.trim();
+        // let stop = input_value.charAt(input_value.length - 1);
+        let lastChar = input_value.charAt(input_value.length - 1);
+        fullstops.includes(lastChar) ? stop = lastChar : stop = ""; //get last char as stop if its not __
+        input_value = input_value.replace(stop, "");
+        input_value.includes("*") ? input_value = input_value.split("*") : input_value = input_value.split("][");
+        input_value = input_value.filter(s => typeof(s) != undefined && s != "").map(s => s.toString().trim()).join("][");
+        console.log(input_value)
+        input_value = `[${input_value}]${stop}`;
+        input_value = input_value.replace("[[", "[").replace("]]", "]").replace(/\]\s+\[/g, ']['); //remove double brackets and space after closing bracket
+        console.log(input_value)
+        quiz = `<quiz audio="${sound}">${input_value}</quiz>`;
+        data += quiz;
+    } //end loop
+    console.log(data);
+
+    template.querySelector("activity").innerHTML = name;
+    template.querySelector("questions").innerHTML = data;
+    content = new XMLSerializer().serializeToString(template);;
+    return content;
+
+} //end updateHA function
+
+/////////////////////////////////// JS Multiple CHOICE //////////////////////////////////////////////////////////////////////////////
+
+function loadMC(contentXML) {
+    return new Promise(function(resolve, reject) {
+
+            let fileContent = fs.readFileSync(contentXML, "utf-8");
+            let $ = cheerio.load(fileContent, { xmlMode: true, decodeEntities: false });
+            let data = "";
+            let onCorrect_settext = document.getElementById("onCorrect_settext");
+            $("item[type=setText]").length ? onCorrect_settext.checked = true : ""; // check setText button
+
+            //    !$("item[type=clickableButton]").length ? reject("Invalid Activity Type") : ""; //reject if not JS multiple choice
+            console.log($.xml())
+
+            $("frame").each(function(i) {
+                let template = new DOMParser().parseFromString(multiplechoiceQuiz, "text/html");
+
+                let no = i + 1;
+                let clueText = $(this).find("item[type=textbox]").text().trim();
+                //clueText.includes("span") ? clueText = $($.parseHTML(clueText)).html() : "";
+                //clueText.match(/[\u3400-\u9FBF]/) ? console.log("chinese") : console.log("english")
+                console.log(clueText)
+                let optns = $(this).find("option");
+                let opt = "";
+                !clueText ? clueText = "" : "";
+                //set options
+                optns.each(function() {
+                    let optionTemplate = new DOMParser().parseFromString(template.querySelector(".quiz_options").innerHTML, "text/html");
+
+                    optText = $(this).text().trim();
+                    //optText.includes("span") ? optText = $($.parseHTML(optText)).html() : "";
+                    //console.log(optText)
+                    optionTemplate.querySelector(".option_value").setAttribute("value", optText);
+                    optionTemplate.querySelector(".option_radio").setAttribute("name", no);
+
+                    $(this).attr("correct") ? optionTemplate.querySelector(".option_radio").setAttribute("checked", true) : optionTemplate.querySelector(".option_radio").removeAttribute("checked");
+
+                    // console.log(optionTemplate.body.innerHTML)
+                    opt += optionTemplate.body.innerHTML;
+                }); //end option loop
+
+                template.querySelector(".quiz_options").innerHTML = opt;
+                template.querySelector("#clueText").setAttribute("value", clueText);
+
+                data += template.body.innerHTML;
+            }); //end outer loop
+
+            if (data) {
+                //console.log(data);
+                quizContainer.innerHTML = data;
+                resolve("loaded");
+            } else {
+                reject("Could not load activity!")
+            }
+        }) //return 
+} //end loadMC
+
+
+function updateMC(XML) {
+    let onCorrect_settext = document.getElementById("onCorrect_settext");
+    //change dom value
+    optionValue = quizContainer.querySelectorAll("input[type=text]");
+    for (let i = 0; i < optionValue.length; i++) {
+        optionValue[i].setAttribute("value", optionValue[i].value);
+    }
+    let radios = quizContainer.querySelectorAll("input[type=radio]");
+    for (let i = 0; i < radios.length; i++) {
+        radios[i].checked ? radios[i].setAttribute("checked", true) : radios[i].removeAttribute("checked", true);
+    }
+
+    let template = new DOMParser().parseFromString(XML, "application/xml");
+    console.log(template)
+
+    let actName = filePath.split("\\");
+    let name = actName[6] + " " + actName[8] + "/" + actName[9];
+    let quizzes = new DOMParser().parseFromString(quizContainer.innerHTML, "text/html")
+
+    let quizzesArray = quizzes.querySelectorAll(".multiplechoice");
+
+    let data = "",
+        content = "";
+    //loop through quizzes
+    for (let i = 0; i < quizzesArray.length; i++) {
+        let quiz = quizzesArray[i];
+        let clueText = quiz.querySelector("#clueText").getAttribute("value");
+        clueText = clueText.toString().trim();
+        //let cc = new DOMParser().parseFromString(clueText, "text/html").qu;
+        let setText = "",
+            setTextLine = "";
+        let opt = "",
+            stop;
+
+        //loop through options
+        let options = quiz.querySelectorAll(".option");
+        console.log(options)
+        let correctAnswer = "";
+        //add all option values in one array
+        for (let j = 0; j < options.length; j++) {
+            let correctFrame = "";
+            let opt_text = options[j].querySelector(".option_value").getAttribute("value").trim();
+            //opt_text.includes("span") ? opt_text = `<![CDATA[${opt_text}]]>` : ""; //wrap in CDATA if includes span tag
+            let opt_radio = options[j].querySelector(".option_radio");
+
+            if (opt_radio.hasAttribute("checked", true)) {
+                correctFrame = ` correct="yes"`;
+                correctAnswer = opt_text;
+            }
+            console.log(correctAnswer);
+            (opt_text.length) ? opt += `<option${correctFrame}><![CDATA[${opt_text.trim()}]]></option>`: "";
+
+        }
+        //combine clueText and correct answer to add in setText
+        if (onCorrect_settext.checked) {
+            let _correctAnswer, _clueText, lastChar = "";
+            if (clueText.includes("span")) {
+
+                _correctAnswer = new DOMParser().parseFromString(correctAnswer, "text/html").querySelector("span").innerHTML;
+                _clueText = new DOMParser().parseFromString(clueText, "text/html").querySelector("span").innerHTML;
+                // console.log(_clueText.charAt(_clueText.length - 1))
+                lastChar = _clueText.charAt(_clueText.length - 1);
+                fullstops.includes(lastChar) ? stop = lastChar : stop = ""; //get last char as stop if its not __
+                _clueText = _clueText.replace(stop, ""); //remove stop from clue
+                _correctAnswer.charAt(_correctAnswer.length - 1) == stop ? stop = "" : ""; //set stop to empty if correct answer already has stop at end
+                _clueText = _clueText.replace(/_/g, '').replace((i + 1), "").replace(".", "").trim(); //remove question no and ___ from clue
+                setText = _clueText + " " + _correctAnswer + stop;
+            } else {
+
+                _clueText = clueText.trim();
+                _correctAnswer = correctAnswer.trim();
+                lastChar = _clueText.charAt(_clueText.length - 1);
+                fullstops.includes(lastChar) ? stop = lastChar : stop = ""; //get last char as stop if its not __
+                _clueText = _clueText.replace(stop, ""); //remove stop from clue
+                _correctAnswer.charAt(_correctAnswer.length - 1) == stop ? stop = "" : ""; //set stop to empty if correct answer already has stop at end
+                _clueText = _clueText.replace(/_/g, '').replace((i + 1), "").replace(".", "").trim(); //remove question no and ___ from clue
+                setText = _clueText + " " + _correctAnswer + stop;
+            }
+            setTextLine = `<item type="setText" id="txt2">${setText.trim()}</item>`
+        } else {
+            setTextLine = "";
+        }
+
+        console.log(setText);
+        let frameContent = `<frame id="${i+1}">
+                                <item type="textbox" id="txt2" display="yes"><![CDATA[${clueText.trim()}]]></item>
+                                <item type="radioButtons" random="yes">
+                                    ${opt}
+                                </item>
+                                <item type="checkButton" id="btn0">
+                                    <item type="checkRadioButtons">
+                                        <correct>
+                                            ${setTextLine}<item type="delay" secs="2"/>
+                                            <item type="nextFrame"/>
+                                        </correct>
+                                        <wrong></wrong>
+                                    </item>
+                                </item>
+                            </frame>${"\n\n"}`;
+
+        data += frameContent;
+    } //end loop
+    !data.includes("</span>") ? data = data.replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1') : "";
+    data = prettifyXml(data, { indent: 4 });
+    //console.log(data)
+    template.querySelector("end").insertAdjacentHTML("beforebegin", data);
+    content = new XMLSerializer().serializeToString(template);;
+    return content;
+} //end updateMC
+
+/////////////////////////////////////////////////////// DRAG CATEGORY ///////////////////////////////////////////////////////////////////
+function loadDC(contentXML) {
+    return new Promise(function(resolve, reject) {
+
+            let fileContent = fs.readFileSync(contentXML, "utf-8");
+            let $ = cheerio.load(fileContent, { xmlMode: true, decodeEntities: false });
+            let data = "";
+
+            //    !$("item[type=target]").length ? reject("Invalid Activity Type") : ""; //reject if not drag category
+
+            $("frame:not(:eq(0))").each(function(i) {
+
+                let template = new DOMParser().parseFromString(dragcategoryQuiz, "text/html");
+
+                let no = i + 1;
+                let optns = $(this).find("item[type=drag]");
+                let opt = "",
+                    allOptions = [];
+
+                let targets = $("item[type=target]");
+                targets.each(function() {
+                    let targetNames = $(this).attr("names").split("|");
+                    console.log(targetNames)
+
+                    let optionTemplate = new DOMParser().parseFromString(template.querySelector(".quiz_options").innerHTML, "text/html");
+                    optns.each(function() {
+                        if (targetNames.includes($(this).attr("name"))) {
+                            allOptions.push($(this).text())
+                        }
+                    }); //end option loop
+                    console.log(allOptions);
+                    optionTemplate.querySelector(".option_value").innerHTML = allOptions.join(" * ");
+                    opt += optionTemplate.body.innerHTML;
+                    allOptions = []
+                });
+
+                template.querySelector(".quiz_options").innerHTML = opt;
+
+                data += template.body.innerHTML;
+            }); //end outer loop
+
+            if (data) {
+                //console.log(data);
+                quizContainer.innerHTML = data;
+                resolve("loaded");
+            } else {
+                reject("Could not load activity!")
+            }
+        }) //return 
+}
+
+function updateDC(XML) {
+    //change dom value
+    let textareas = quizContainer.querySelectorAll("textarea");
+    for (let t = 0; t < textareas.length; t++) {
+        textareas[t].setAttribute("value", textareas[t].value);
+    }
+
+    let template = new DOMParser().parseFromString(XML, "application/xml");
+    console.log(template)
+
+    let actName = filePath.split("\\");
+    let name = actName[6] + " " + actName[8] + "/" + actName[9];
+    let quizzes = new DOMParser().parseFromString(quizContainer.innerHTML, "text/html")
+    let quizzesArray = quizzes.querySelectorAll(".dragcategory");
+
+    let data = "",
+        content = "";
+    //loop through quizzes
+    for (let i = 0; i < quizzesArray.length; i++) {
+        let no = i + 2;
+        let quiz = quizzesArray[i],
+            opt = "",
+            values = [],
+            targets = [];
+        //let clueText = quiz.querySelector("#clueText").getAttribute("value").trim();
+
+        //loop through options
+        let options = quiz.querySelectorAll(".option");
+        console.log(options)
+        let dragCount = 0;
+        //add all option values in one array
+        for (let j = 0; j < options.length; j++) {
+            let targetNames = []
+            let opt_text = options[j].querySelector(".option_value").getAttribute("value").trim();
+            if (opt_text.length) {
+                let column = opt_text.split("*");
+                console.log(column.length)
+                values = values.concat(opt_text.split("*"));
+
+                values.filter(val => typeof(val) !== undefined && val != "").map((val, v) => {
+                    opt += `<item type="drag" sym="d${dragCount}"  persist="yes" group="group0" visible="no" frame="1" name="d${dragCount}">${val.toString().trim()}</item>`
+                    targetNames.push(`d${dragCount}`);
+                    dragCount++;
+                });
+                targetNames = targetNames.join("|").toString();
+                targets.push(`<item type="target" sym="tg${j}" names="${targetNames}"/>`);
+                targetNames = [];
+            }
+            values = [];
+        }
+
+
+        console.log(opt)
+        console.log(targets)
+        let frameContent = `<frame num="${no}">
+                                ${opt}${"\n\n"}
+                                ${targets.join("").toString()}
+                                <item type="button" btn="btnCheck" visible="no">
+                                    <action type="validateDragItems" mark="mark" lockCorrect="yes"/>
+                                </item>
+                                <action type="randomiseGroup" group="group0"/>
+                                <action type="showDragGroup" group="group0"/>
+                                <action type="show" sym="btnCheck"/>
+                                <action type="waitTest"></action>
+                                <action type="hide" sym="btnCheck"/>
+                                <action type="delay" secs="2"/>
+                            </frame>${"\n\n"}`;
+
+        data += frameContent;
+    } //end loop
+    data = prettifyXml(data, { indent: 4 })
+    template.querySelector("activity").innerHTML = name;
+    template.querySelector("end").insertAdjacentHTML("beforebegin", data);
+    content = new XMLSerializer().serializeToString(template);;
+    return content;
+}
