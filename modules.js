@@ -587,7 +587,7 @@ function updateMC(XML) {
 
         data += frameContent;
     } //end loop
-    !data.includes("</span>") ? data = data.replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1') : "";
+    //  !data.includes("</span>") ? data = data.replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1') : "";
     data = prettifyXml(data, { indent: 4 });
     //console.log(data)
     template.querySelector("end").insertAdjacentHTML("beforebegin", data);
@@ -614,7 +614,7 @@ function loadDC(contentXML) {
                 let opt = "",
                     allOptions = [];
 
-                let targets = $("item[type=target]");
+                let targets = $(this).find("item[type=target]");
                 targets.each(function() {
                     let targetNames = $(this).attr("names").split("|");
                     console.log(targetNames)

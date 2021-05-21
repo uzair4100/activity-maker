@@ -31,6 +31,22 @@ body {
     font-weight: 600;
 }
 
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.fadeIn {
+    opacity: 1;
+    -moz-animation: fadeIn 0.5s linear;
+    -webkit-animation: fadeIn 0.5s linear;
+    animation: fadeIn 0.5s linear;
+}
+
 
 /*
 #status {

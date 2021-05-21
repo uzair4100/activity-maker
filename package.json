@@ -9,14 +9,16 @@
         "pack": "electron-builder --dir",
         "dist": "electron-builder",
         "dist-all": "electron-builder -mw",
-        "dev": "nodemon --watch * --exec \"electron . --debug\" -e js,json,html,css"
+        "dev": "nodemon --watch * --exec \"electron . --debug\" -e js,json,html,css",
+        "build": "build --win",
+        "ship": "build --win -p always"
     },
     "build": {
+
         "appId": "com.activity.quickstart",
         "win": {
             "target": "nsis"
-        },
-        "asar": "false"
+        }
     },
     "author": "uzair",
     "license": "MIT",
@@ -31,11 +33,10 @@
     "dependencies": {
         "cheerio": "^1.0.0-rc.3",
         "electron-build": "0.0.3",
+        "electron-updater": "^4.3.9",
         "jquery": "^3.6.0",
         "open": "^7.0.4",
         "prettify-xml": "^1.2.0",
-        "recursive-copy": "^2.0.11",
-        "sortablejs": "^1.13.0",
-        "xml-formatter": "^2.4.0"
+        "recursive-copy": "^2.0.11"
     }
 }

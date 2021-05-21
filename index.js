@@ -5,11 +5,8 @@ const path = require("path");
 const http = require("http");
 const fs = require("fs");
 const cheerio = require("cheerio");
-const Sortable = require("sortablejs");
 var prettifyXml = require('prettify-xml');
-const { active } = require("sortablejs");
 const copy = require('recursive-copy');
-const { serialize } = require("v8");
 
 //variables
 var filePath, optionValue, help, helpContent, activity, quiz = "",
@@ -48,7 +45,6 @@ console.log(appVersion)
                 shell.openExternal(path.join(__dirname, 'dist/Activity_Maker Setup 1.0.1.exe'));
             }
         })
-
     }*/
 
 //sortable
@@ -62,12 +58,15 @@ structure.style.display = "none";
 
 //load activity event handler
 document.querySelector("#load").addEventListener("click", function() {
+    help = "";
     filePath = document.querySelector("#filePath").value;
     attrRemover()
     quizContainer.innerHTML = "", audioFiles = [];
-    document.getElementById("addQuiz").removeAttribute("disabled", true);
-    document.getElementById("duplicate").removeAttribute("disabled", true);
-
+    // document.getElementById("addQuiz").removeAttribute("disabled", true);
+    // document.getElementById("duplicate").removeAttribute("disabled", true);
+    // document.getElementById("help").removeAttribute("disabled", true);
+    //let btns = document.querySelectorAll("#addQuiz,#duplicate,#help");
+    //btns.forEach(btn => btn.removeAttribute("disabled", true))
     let fileExist = fs.existsSync(path.join(filePath, "content.xml"));
 
     fileExist ? activity = activityFinder(filePath) : activity = activityType.options[activityType.selectedIndex].text.trim();
@@ -100,11 +99,12 @@ document.querySelector("#load").addEventListener("click", function() {
             break;
 
         case "Multiple Choice":
+            document.getElementById("help").setAttribute("disabled", true);
             fetcher(fileExist, loadMC(contentFile), filePath, multiplechoiceQuiz);
             break;
 
         case "Drag Category":
-            // document.getElementById("duplicate").setAttribute("disabled", true);
+            document.getElementById("duplicate").setAttribute("disabled", true);
             audioFiles = ["drop.mp3"];
             fetcher(fileExist, loadDC(contentFile), filePath, dragcategoryQuiz);
             break;
@@ -157,34 +157,29 @@ document.addEventListener("click", function(e) {
     let button = e.target;
     console.log(button);
     if (button.classList.contains("del_quiz")) {
-        //button.closest(".selectitem").remove();
-        quizContainer.childElementCount > 1 ? button.parentElement.parentElement.remove() : "";
-        arrange(".quiz");
+        let act = button.parentElement.parentElement;
+        quizContainer.childElementCount > 1 ? removeFadeOut(act, 500) : "";
     }
 
     if (button.classList.contains("del")) {
-        arrange(".quiz");
         if (activity == "Sentence Builder") {
             if (button.closest(".quiz_options").childElementCount > 1) {
                 let sentence = button.parentElement.parentElement.parentElement.firstElementChild.lastElementChild;
-                let text = sentence.getAttribute("value");
+                //   sentence.setAttribute("value", sentence.value);
+                let text = sentence.value;
                 let ans = button.previousElementSibling.getAttribute("value");
-                //   let startIndex = text.indexOf(`[${ans}]`);
-                //  let endIndex = startIndex + ans.length - 1;
-                // console.log(endIndex)
+
                 let _text = text.replace(`[${ans}]`, ans)
-                    //  let _text = text.substring(0, startIndex - 1) + ans + text.substring(endIndex + 1, text.length);
-                console.log(_text)
                 sentence.setAttribute("value", _text);
                 sentence.value = sentence.getAttribute("value");
-                button.closest(".option").remove()
+                removeFadeOut(button.closest(".option"), 500);
             }
 
         } else {
-            button.closest(".quiz_options").childElementCount > 1 ? button.closest(".option").remove() : "";
+            button.closest(".quiz_options").childElementCount > 1 ? removeFadeOut(button.closest(".option"), 500) : "";
         }
     }
-
+    ///////add option////////
     if (button.classList.contains("addOption")) {
         let opt = button.previousElementSibling.lastElementChild.outerHTML;
         opt = new DOMParser().parseFromString(opt, "text/html");
@@ -197,10 +192,11 @@ document.addEventListener("click", function(e) {
             newOpt[i].innerHTML = ""; //empty text area
         }
         button.previousElementSibling.insertAdjacentHTML("beforeend", opt.body.innerHTML);
+        button.previousElementSibling.lastElementChild.classList.add('fadeIn');
         button.previousElementSibling.lastElementChild.querySelector(".option_value").focus();
 
     }
-
+    /////////add quiz////////////
     if (button.id == "addQuiz") {
         switch (activity) {
             case "Select Item":
@@ -217,9 +213,10 @@ document.addEventListener("click", function(e) {
                 break;
         }
         quizContainer.insertAdjacentHTML("beforeend", quiz);
+        quizContainer.lastElementChild.classList.add('fadeIn');
         arrange(".quiz");
     }
-
+    /////////duplicate////////////
     if (button.id == "duplicate") {
         //change dom values
         optionValue = quizContainer.querySelectorAll(".option_value");
@@ -241,6 +238,7 @@ document.addEventListener("click", function(e) {
         }
         console.log(quiz.body.innerHTML)
         quizContainer.insertAdjacentHTML("beforeend", quiz.body.innerHTML);
+        quizContainer.lastElementChild.classList.add('fadeIn');
     }
 
     if (button.id == "help") {
@@ -441,13 +439,23 @@ function copyFiles() {
 }
 
 function attrRemover() {
-    let structure = document.getElementById("structure");
-    let checkboxes = structure.querySelectorAll("input[type=checkbox]");
-    for (let i = 0; i < checkboxes.length; i++) {
-        //checkboxes[i].removeAttribute("checked");
-        checkboxes[i].checked = false;
-    }
+    let checkboxes = document.getElementById("structure").querySelectorAll("input[type=checkbox]");
+    checkboxes.forEach(checkbox => checkbox.checked = false);
+    let btns = document.querySelectorAll("#addQuiz,#duplicate,#help");
+    btns.forEach(btn => btn.removeAttribute("disabled", true));
 }
+
+function removeFadeOut(el, speed) {
+    var seconds = speed / 1000;
+    el.style.transition = "opacity " + seconds + "s ease";
+
+    el.style.opacity = 0;
+    setTimeout(function() {
+        el.remove();
+        arrange(".quiz");
+    }, speed);
+}
+
 
 function displayMessage(msg, duration) {
     status.style.display = "";

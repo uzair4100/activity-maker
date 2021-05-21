@@ -3,33 +3,13 @@ const url = require('url');
 const path = require('path');
 const dialog = electron.dialog;
 const ipc = electron.ipcMain;
-const { app, BrowserWindow, shell } = electron;
+const { app, BrowserWindow } = electron;
 var mainWindow, helpWindow, position = [];
 
 
 
 app.on('ready', function() {
 
-    //receive update app event
-    /* ipc.on("updateApp", function(event) {
-         console.log("executed")
-             //  var window = BrowserWindow.fromWebContents(event.sender);
-
-         var messageOptions = {
-             type: 'question',
-             title: 'Update Available',
-             detail: 'New version of App is available',
-             buttons: ['No, thanks', 'Yes, please'],
-             noLink: true,
-             cancelId: 0,
-             defaultId: 1,
-         };
-         dialog.showMessageBox(messageOptions, (result) => {
-             console.log(result.response)
-             event.sender.send('updateApp-response', result);
-         });
-
-     });*/
 
     //creat new window
     mainWindow = new BrowserWindow({
@@ -48,7 +28,7 @@ app.on('ready', function() {
         protocol: 'file',
         slashes: true
     }));
-    mainWindow.webContents.openDevTools();
+    //mainWindow.webContents.openDevTools();
 
     //receive load file event
     ipc.on('chooseFile-dialog', function(event) {
