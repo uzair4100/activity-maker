@@ -1,27 +1,32 @@
 {
-    "name": "Activity_Maker",
-    "version": "1.0.0",
+    "name": "activity-maker",
+    "version": "0.0.0",
     "description": "Make interactives",
+    "author": "Uzair",
+    "license": "MIT",
     "main": "main.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "start": "electron .",
         "pack": "electron-builder --dir",
         "dist": "electron-builder",
-        "dist-all": "electron-builder -mw",
-        "dev": "nodemon --watch * --exec \"electron . --debug\" -e js,json,html,css",
-        "build": "build --win",
-        "ship": "build --win -p always"
+        "gh-publish": "electron-builder --x64 -p always",
+        "dev": "nodemon --watch * --exec \"electron . --debug\" -e js,json,html,css"
     },
     "build": {
-
         "appId": "com.activity.quickstart",
+        "publish": [{
+            "provider": "github",
+            "owner": "uzair4100",
+            "repo": "activity-maker"
+        }],
         "win": {
+            "publish": [
+                "github"
+            ],
             "target": "nsis"
         }
     },
-    "author": "uzair",
-    "license": "MIT",
     "devDependencies": {
         "cross-env": "^7.0.1",
         "electron": "^9.2.0",
@@ -37,6 +42,7 @@
         "jquery": "^3.6.0",
         "open": "^7.0.4",
         "prettify-xml": "^1.2.0",
-        "recursive-copy": "^2.0.11"
+        "recursive-copy": "^2.0.11",
+        "uaup-js": "0.0.22"
     }
 }

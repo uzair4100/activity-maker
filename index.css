@@ -47,14 +47,9 @@ body {
     animation: fadeIn 0.5s linear;
 }
 
-
-/*
-#status {
-    font-size: 20px;
-    color: black;
-    font-weight: bolder;
-    text-align: center;
-    background: cyan;
-    margin: 5px 30px;
-    border-radius: 2px;
-}*/
+textarea {
+    resize: none;
+    overflow: auto;
+    min-height: 50px;
+    max-height: 1000px;
+}

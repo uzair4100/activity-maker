@@ -47,7 +47,6 @@
         const content = document.getElementById("content");
         var editor;
 
-
         //recieve data from main and fill in editor
         ipcRenderer.on("help-window", function(e, data) {
             setTimeout(() => {
@@ -58,7 +57,7 @@
                             [{
                                 header: [3, false]
                             }],
-                            ['bold'],
+                            ['bold']
                         ]
                     },
                     placeholder: "Instructions in language \n Instructions in English",

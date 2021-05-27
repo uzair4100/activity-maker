@@ -8,8 +8,10 @@ const cheerio = require("cheerio");
 var prettifyXml = require('prettify-xml');
 const copy = require('recursive-copy');
 
+
+
 //variables
-var filePath, optionValue, help, helpContent, activity, quiz = "",
+var filePath, optionValue, help, helpContent, activity, textSelected, quiz = "",
     audioFiles = [];
 var source = path.join(require("os").homedir(), "id01/content.xml");
 //xml templates
@@ -32,86 +34,72 @@ const status = document.getElementById("status");
 const activityType = document.getElementById("activityType");
 const templateFolder = path.join(__dirname, "template");
 const fullstops = [".", "。", "|", "?"];
+const wrap = document.getElementById("wrap");
+const languages = document.getElementById("languages");
 status.style.display = "none"
 var appVersion = electron.remote.app.getVersion();
 const dialog = electron.remote.dialog;
 
 console.log(appVersion)
-    /*if (appVersion != "1.0.1") {
-        ipcRenderer.send("updateApp");
-        ipcRenderer.on('updateApp-response', function(e, resp) {
-            console.log(resp)
-            if (resp == 1) {
-                shell.openExternal(path.join(__dirname, 'dist/Activity_Maker Setup 1.0.1.exe'));
-            }
-        })
-    }*/
-
-//sortable
-/*Sortable.create(quizContainer, {
-    // filter: ".sentence",
-    onEnd: () => arrange(".quiz"),
-});*/
 
 var structure = document.querySelector("#structure");
 structure.style.display = "none";
 
 //load activity event handler
 document.querySelector("#load").addEventListener("click", function() {
-    help = "";
-    filePath = document.querySelector("#filePath").value;
-    attrRemover()
-    quizContainer.innerHTML = "", audioFiles = [];
-    // document.getElementById("addQuiz").removeAttribute("disabled", true);
-    // document.getElementById("duplicate").removeAttribute("disabled", true);
-    // document.getElementById("help").removeAttribute("disabled", true);
-    //let btns = document.querySelectorAll("#addQuiz,#duplicate,#help");
-    //btns.forEach(btn => btn.removeAttribute("disabled", true))
-    let fileExist = fs.existsSync(path.join(filePath, "content.xml"));
+    if (filePath.length && typeof(filePath) !== undefined && filePath != "") {
+        help = "";
+        filePath = document.querySelector("#filePath").value;
+        attrRemover()
+        quizContainer.innerHTML = "", audioFiles = [];
 
-    fileExist ? activity = activityFinder(filePath) : activity = activityType.options[activityType.selectedIndex].text.trim();
-    console.log(activity)
-    let contentFile = path.join(filePath, "content.xml");
+        let fileExist = fs.existsSync(path.join(filePath, "content.xml"));
 
-    //find template
-    switch (activity) {
-        case "Select Item":
-            audioFiles = ["correct.mp3", "prompt.mp3", "select.mp3", "wrong.mp3"];
-            fetcher(fileExist, loadSI(contentFile), filePath, selectitemQuiz);
-            break;
+        fileExist ? activity = activityFinder(filePath) : activity = activityType.options[activityType.selectedIndex].text.trim();
+        console.log(activity)
+        let contentFile = path.join(filePath, "content.xml");
 
-        case "Vertical Arrange":
-            document.getElementById("addQuiz").setAttribute("disabled", true);
-            document.getElementById("duplicate").setAttribute("disabled", true);
-            fetcher(fileExist, loadVA(contentFile), filePath, verticalarrangeQuiz);
-            break;
+        //find template
+        switch (activity) {
+            case "Select Item":
+                audioFiles = ["correct.mp3", "prompt.mp3", "select.mp3", "wrong.mp3"];
+                fetcher(fileExist, loadSI(contentFile), filePath, selectitemQuiz);
+                break;
 
-        case "Horizontal Arrange":
-            audioFiles = ["silence.mp3"];
-            document.getElementById("addQuiz").setAttribute("disabled", true);
-            document.getElementById("duplicate").setAttribute("disabled", true);
-            fetcher(fileExist, loadHA(contentFile), filePath, horizontalarrangeQuiz);
-            break;
+            case "Vertical Arrange":
+                document.getElementById("addQuiz").setAttribute("disabled", true);
+                document.getElementById("duplicate").setAttribute("disabled", true);
+                fetcher(fileExist, loadVA(contentFile), filePath, verticalarrangeQuiz);
+                break;
 
-        case "Sentence Builder":
-            audioFiles = ["drop.mp3", "prompt.mp3", "tap.mp3", "wrong.mp3"];
-            fetcher(fileExist, loadSB(contentFile), filePath, sentencebuilderQuiz);
-            break;
+            case "Horizontal Arrange":
+                audioFiles = ["silence.mp3"];
+                document.getElementById("addQuiz").setAttribute("disabled", true);
+                document.getElementById("duplicate").setAttribute("disabled", true);
+                fetcher(fileExist, loadHA(contentFile), filePath, horizontalarrangeQuiz);
+                break;
 
-        case "Multiple Choice":
-            document.getElementById("help").setAttribute("disabled", true);
-            fetcher(fileExist, loadMC(contentFile), filePath, multiplechoiceQuiz);
-            break;
+            case "Sentence Builder":
+                audioFiles = ["drop.mp3", "prompt.mp3", "tap.mp3", "wrong.mp3"];
+                fetcher(fileExist, loadSB(contentFile), filePath, sentencebuilderQuiz);
+                break;
 
-        case "Drag Category":
-            document.getElementById("duplicate").setAttribute("disabled", true);
-            audioFiles = ["drop.mp3"];
-            fetcher(fileExist, loadDC(contentFile), filePath, dragcategoryQuiz);
-            break;
-        default:
-            quizContainer.innerHTML = "Invalid Activity Type!";
+            case "Multiple Choice":
+                document.getElementById("help").setAttribute("disabled", true);
+                fetcher(fileExist, loadMC(contentFile), filePath, multiplechoiceQuiz);
+                break;
+
+            case "Drag Category":
+                document.getElementById("duplicate").setAttribute("disabled", true);
+                audioFiles = ["drop.mp3"];
+                fetcher(fileExist, loadDC(contentFile), filePath, dragcategoryQuiz);
+                break;
+            default:
+                quizContainer.innerHTML = "Invalid Activity Type!";
+        }
+    } else {
+        quizContainer.innerHTML = "Choose Path";
     }
-
 });
 
 /////////////////////find source path/////////////////////////////////////////
@@ -123,39 +111,74 @@ document.getElementById("chooseFile").addEventListener("click", function() {
         document.getElementById("filePath").value = folders[0];
         filePath = document.getElementById("filePath").value;
     });
+
 }); //end source path
 
 
 
 /////////////////////////////////////////get selection for sentence builder /////////////////////////////////////////
-document.addEventListener("mouseup", function(e) {
-    let el = e.target;
-    let text = el.value;
-    let start = el.selectionStart;
-    let end = el.selectionEnd;
 
-    if (el.classList.contains("sentence")) {
-        let word = (window.getSelection() || document.getSelection()).toString();
-        if (word.trim().length) {
-            text = text.substring(0, start) + "[" + word + "]" + text.substring(end, text.length); //make new sentence
-            el.setAttribute("value", text);
-            el.value = el.getAttribute("value");
-
-            //set option
-            let opt = `<div class="input-group mt-1 option">
-                        <input type="text" class="form-control option_value" value="${word}"/>
-                        <button class="del">X</button>
-                    </div>`;
-            el.closest(".sentencebuilder").querySelector(".quiz_options").insertAdjacentHTML("beforeend", opt);
-        }
-    }
-});
 
 ////////////////////////////////////////////////////add or delete quizzes and options//////////////////////////////////////////////////
 document.addEventListener("click", function(e) {
 
     let button = e.target;
     console.log(button);
+
+    if (button.id == "wrap") {
+        let el = e.target.previousElementSibling;
+        let text = el.value;
+        console.log(text)
+            //let start = window.getSelection().getRangeAt(0).startOffset;
+            //let end = window.getSelection().getRangeAt(0).endOffset;
+        let start = el.selectionStart;
+        let end = el.selectionEnd;
+        console.log(start)
+        console.log(end)
+        if (el.classList.contains("sentence")) {
+            let word = (text.substring(start, end)).toString();
+            if (word.trim().length) {
+
+                text = text.substring(0, start) + "[" + word + "]" + text.substring(end, text.length); //make new sentence
+                console.log(text)
+                el.innerHTML = text;
+                el.value = el.innerHTML;
+                //set option
+                let opt = `<div class="input-group mt-1 option">
+                            <input type="text" class="form-control option_value" value="${word}"/>
+                            <button class="del">X</button>
+                        </div>`;
+                let optns = []
+                let ops = el.closest(".sentencebuilder").querySelectorAll(".option_value");
+                ops.forEach(op => optns.push(op.value));
+                !optns.includes(word) ? el.closest(".sentencebuilder").querySelector(".quiz_options").insertAdjacentHTML("beforeend", opt) : ""; //append option only if it's not there
+            }
+        }
+    }
+    if (button.id == "bulk") {
+        let bulkText = button.previousElementSibling.value;
+        let name = button.closest(".quiz").querySelector(".no").innerHTML;
+        let values = bulkText.split("\n");
+        console.log(values)
+        values.filter(val => typeof(val) !== undefined && val != "").map((val, v) => {
+            let opt = `<div class="input-group mt-1 option">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                            <input type="radio" name="${name}" class="option_radio" />
+                                        </div>
+                                    </div>
+                                    <input type="text" class="form-control option_value" value="${val}"/>
+                                    <button class="del">X</button>
+                                </div>`;
+            button.closest(".quiz").querySelector(".quiz_options").insertAdjacentHTML("beforeend", opt);
+
+        });
+        button.previousElementSibling.value = "";
+        button.previousElementSibling.focus();
+    }
+
+
+
     if (button.classList.contains("del_quiz")) {
         let act = button.parentElement.parentElement;
         quizContainer.childElementCount > 1 ? removeFadeOut(act, 500) : "";
@@ -164,19 +187,18 @@ document.addEventListener("click", function(e) {
     if (button.classList.contains("del")) {
         if (activity == "Sentence Builder") {
             if (button.closest(".quiz_options").childElementCount > 1) {
-                let sentence = button.parentElement.parentElement.parentElement.firstElementChild.lastElementChild;
-                //   sentence.setAttribute("value", sentence.value);
-                let text = sentence.value;
+
+                let sentence = button.parentElement.parentElement.parentElement.firstElementChild.children[0];
+                let text = sentence.innerHTML;
                 let ans = button.previousElementSibling.getAttribute("value");
-
+                console.log(ans)
                 let _text = text.replace(`[${ans}]`, ans)
-                sentence.setAttribute("value", _text);
-                sentence.value = sentence.getAttribute("value");
-                removeFadeOut(button.closest(".option"), 500);
+                sentence.innerHTML = _text;
+                sentence.value = sentence.innerHTML;
+                removeFadeOut(button.closest(".option"), 300);
             }
-
         } else {
-            button.closest(".quiz_options").childElementCount > 1 ? removeFadeOut(button.closest(".option"), 500) : "";
+            button.closest(".quiz_options").childElementCount > 1 ? removeFadeOut(button.closest(".option"), 300) : "";
         }
     }
     ///////add option////////
@@ -250,14 +272,16 @@ document.addEventListener("click", function(e) {
             console.log(help)
         });
     }
+
+
 });
 
 /////////////////////////////////submit//////////////////////////////////////////////////////////
 
 document.querySelector("#submit").addEventListener("click", function() {
     let actName = filePath.split("\\");
-    let name = "Update " + actName[6] + "/" + actName[7] + "/" + actName[8] + "/" + actName[9];
-    if (confirm(name + " ?")) {
+    let name = actName[6] + "/" + actName[7] + "/" + actName[8] + "/" + actName[9];
+    if (confirm("Update " + name + " ?")) {
         arrange(".quiz");
         let xmlTemplate, content;
         //find template
@@ -386,6 +410,7 @@ function fetcher(exist, callFunction, filePath, template) {
             quizContainer.innerHTML = `<div class="alert alert-danger" role="alert">${err}</div>`;
         })
     } else {
+
         quizContainer.innerHTML = template;
         helpContent = helper(filePath); //get content from help file if exists
     }
@@ -454,6 +479,11 @@ function removeFadeOut(el, speed) {
         el.remove();
         arrange(".quiz");
     }, speed);
+}
+
+function auto_grow(element) {
+    element.style.height = "auto";
+    element.style.height = (element.scrollHeight) + "px";
 }
 
 

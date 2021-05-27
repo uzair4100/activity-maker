@@ -23,7 +23,7 @@ function loadSB(contentXML) {
             }); //end option loop
 
             template.querySelector(".quiz_options").innerHTML = opt;
-            template.querySelector("#clueText").setAttribute("value", clueText);
+            template.querySelector("#clueText").innerHTML = clueText;
             template.querySelector(".no").innerHTML = no;
 
             data += template.body.innerHTML;
@@ -45,6 +45,10 @@ function updateSB(XML) {
     for (let i = 0; i < optionValue.length; i++) {
         optionValue[i].setAttribute("value", optionValue[i].value);
     }
+    let textarea = quizContainer.querySelectorAll("textarea");
+    for (let i = 0; i < textarea.length; i++) {
+        textarea[i].innerHTML = textarea[i].value;
+    }
 
     let template = new DOMParser().parseFromString(XML, "application/xml");
     console.log(template)
@@ -60,7 +64,7 @@ function updateSB(XML) {
     //loop through quizzes
     for (let i = 0; i < quizzesArray.length; i++) {
         let quiz = quizzesArray[i];
-        let clueText = quiz.querySelector("#clueText").getAttribute("value");
+        let clueText = quiz.querySelector("#clueText").innerHTML;
         let clue = "";
         let no = i + 2;
         let opt = "",
@@ -116,7 +120,7 @@ function loadSI(contentXML) {
             //find randomise option
             $("action[type=randomiseChoices]").length ? document.querySelector("#options_random").checked = true : "";
             //find play audio
-            $("passed").children("action[type=playSound]").length ? document.querySelector("#onCorrect_audio").checked = true : "";
+            $("action[type=playSound]").attr('file') == "s001.mp3" ? document.querySelector("#onCorrect_audio").checked = true : "";
 
             //  !$("passed").length ? reject("Invalid Activity Type") : ""; //reject if not select item
 
@@ -212,6 +216,7 @@ function updateSI(XML) {
             console.log(correct);
             if (opt_text.length) {
                 (opt_text.includes("*")) ? values = values.concat(opt_text.split("*")): values.push(opt_text);
+                // (opt_text.includes("\n")) ? values = values.concat(opt_text.split("\n")): values.push(opt_text);
             }
         }
 
@@ -309,7 +314,9 @@ function updateVA(XML) {
     console.log(quizzesArray)
 
     let data = "",
-        content = "";
+        content = "",
+        _left = [],
+        _right = [];
     //loop through quizzes
     for (let i = 0; i < quizzesArray.length; i++) {
         let quiz = quizzesArray[i],
@@ -320,10 +327,24 @@ function updateVA(XML) {
         let left = options[0].innerHTML.trim();
         let right = options[1].innerHTML.trim();
 
-        opt = `<quiz><left>${left}</left><right>${right}</right></quiz>`;
+        // opt = `<quiz><left>${left}</left><right>${right}</right></quiz>`;
 
-        data += opt;
+        if (left.length) {
+            (left.includes("\n")) ? _left = _left.concat(left.split("\n")): _left.push(left);
+        }
+        if (right.length) {
+            (right.includes("\n")) ? _right = _right.concat(right.split("\n")): _right.push(right);
+        }
+        console.log(_left)
+        console.log(_right)
+
     } //end loop
+    // values.filter(val => typeof(val) !== undefined && val != "").map((val, v) => opt += `<option sym="opt_${v}">${val.trim()}</option>`);
+    for (j = 0; j < _left.length; j++) {
+        data += `<quiz><left>${_left[j].trim()}</left><right>${_right[j].trim()}</right></quiz>`;
+    }
+    // data += opt;
+
     data = prettifyXml(data, { indent: 2 })
     template.querySelector("activity").innerHTML = name;
     template.querySelector("questions").innerHTML = data;
@@ -505,7 +526,8 @@ function updateMC(XML) {
     let quizzes = new DOMParser().parseFromString(quizContainer.innerHTML, "text/html")
 
     let quizzesArray = quizzes.querySelectorAll(".multiplechoice");
-
+    //clueText.includes("span") ? clueText = $($.parseHTML(clueText)).html() : "";
+    //clueText.match(/[\u3400-\u9FBF]/) ? console.log("chinese") : console.log("english")
     let data = "",
         content = "";
     //loop through quizzes
@@ -535,7 +557,8 @@ function updateMC(XML) {
                 correctAnswer = opt_text;
             }
             console.log(correctAnswer);
-            (opt_text.length) ? opt += `<option${correctFrame}><![CDATA[${opt_text.trim()}]]></option>`: "";
+            !opt_text.includes("span") && opt_text.match(/[\u3400-\u9FBF]/) ? opt_text = `<span style="font-family:STkaiti; font-size: 140%">${opt_text.trim()}</span>` : "";
+            (opt_text.length) ? opt += `<option${correctFrame}><![CDATA[${opt_text}]]></option>`: "";
 
         }
         //combine clueText and correct answer to add in setText
@@ -568,6 +591,7 @@ function updateMC(XML) {
             setTextLine = "";
         }
 
+        !clueText.includes("span") && clueText.match(/[\u3400-\u9FBF]/) ? clueText = `<span style="font-family:STkaiti; font-size: 140%">${clueText.trim()}</span>` : "";
         console.log(setText);
         let frameContent = `<frame id="${i+1}">
                                 <item type="textbox" id="txt2" display="yes"><![CDATA[${clueText.trim()}]]></item>
@@ -626,7 +650,7 @@ function loadDC(contentXML) {
                         }
                     }); //end option loop
                     console.log(allOptions);
-                    optionTemplate.querySelector(".option_value").innerHTML = allOptions.join(" * ");
+                    optionTemplate.querySelector(".option_value").innerHTML = allOptions.join("\n");
                     opt += optionTemplate.body.innerHTML;
                     allOptions = []
                 });
@@ -648,9 +672,9 @@ function loadDC(contentXML) {
 
 function updateDC(XML) {
     //change dom value
-    let textareas = quizContainer.querySelectorAll("textarea");
-    for (let t = 0; t < textareas.length; t++) {
-        textareas[t].setAttribute("value", textareas[t].value);
+    let option_value = quizContainer.querySelectorAll(".option_value");
+    for (let t = 0; t < option_value.length; t++) {
+        option_value[t].innerHTML = option_value[t].value;
     }
 
     let template = new DOMParser().parseFromString(XML, "application/xml");
@@ -679,12 +703,12 @@ function updateDC(XML) {
         //add all option values in one array
         for (let j = 0; j < options.length; j++) {
             let targetNames = []
-            let opt_text = options[j].querySelector(".option_value").getAttribute("value").trim();
+            let opt_text = options[j].querySelector(".option_value").innerHTML;
             if (opt_text.length) {
-                let column = opt_text.split("*");
+                let column = opt_text.split("\n");
                 console.log(column.length)
-                values = values.concat(opt_text.split("*"));
-
+                values = values.concat(opt_text.split("\n"));
+                console.log(values)
                 values.filter(val => typeof(val) !== undefined && val != "").map((val, v) => {
                     opt += `<item type="drag" sym="d${dragCount}"  persist="yes" group="group0" visible="no" frame="1" name="d${dragCount}">${val.toString().trim()}</item>`
                     targetNames.push(`d${dragCount}`);
@@ -716,6 +740,7 @@ function updateDC(XML) {
 
         data += frameContent;
     } //end loop
+    //data = data.replace(/\&nbsp;/g, '');
     data = prettifyXml(data, { indent: 4 })
     template.querySelector("activity").innerHTML = name;
     template.querySelector("end").insertAdjacentHTML("beforebegin", data);

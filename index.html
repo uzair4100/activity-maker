@@ -2,7 +2,6 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Interactives maker</title>
@@ -135,7 +134,9 @@
 
     <!--==============================================TEMPLATES====================================================================-->
     <!--===========================================================================================================================-->
+
     <div id="templates">
+
         <div class="w-100 p-0 quiz selectitem">
             <div class="bg-dark text-white w-100 d-flex justify-content-between px-1 heading">
                 <div class="no">1</div>
@@ -148,7 +149,12 @@
                     </div>
                     <input id="clueText" type="text" class="form-control" value="" />
                 </div>
+                <div class="d-flex justify-content-around align-items-center">
+                    <textarea style="width: 70%;" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control bulk_value" rows="1"></textarea>
+                    <button class="btn-outline-info btn-sm" id="bulk">Make Options</button>
+                </div>
                 <div class="h6 mr-3">Options</div>
+
                 <div class="w-100 m-0 p-0 quiz_options">
                     <div class="input-group mt-1 option">
                         <div class="input-group-prepend">
@@ -170,10 +176,8 @@
                     <div class="input-group my-2 option">
                         <div class="d-flex w-100">
                             <div class="input-group">
-                                <!--<input type="text" class="form-control option_value">
-                                <input type="text" class="form-control option_value">-->
-                                <textarea class="form-control option_value" rows="3"></textarea>
-                                <textarea class="form-control option_value" rows="3"></textarea>
+                                <textarea oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control option_value" rows="1"></textarea>
+                                <textarea oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control option_value" rows="1"></textarea>
                             </div>
                             <button class="del">X</button>
                         </div>
@@ -189,8 +193,7 @@
                     <div class="input-group my-2 option">
                         <div class="d-flex w-100">
                             <div class="input-group">
-                                <!--<input type="text" class="form-control option_value">-->
-                                <textarea class="form-control option_value" rows="2"></textarea>
+                                <textarea oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control option_value" rows="1"></textarea>
                             </div>
                             <button class="del">X</button>
                         </div>
@@ -206,11 +209,9 @@
                 <div class="del_quiz">X</div>
             </div>
             <div class="border border-dark px-5 mb-2 w-100">
-                <div class="input-group m-1">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text">Sentence</span>
-                    </div>
-                    <input id="clueText" type="text" class="form-control sentence" value="" />
+                <div class="input-group my-1 d-flex align-items-center">
+                    <textarea id="clueText" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control sentence" rows="1"></textarea>
+                    <button id="wrap" class="btn-outline-info ml-2">Select</button>
                 </div>
                 <div class="h6 mr-3">Options</div>
                 <div class="w-100 m-0 p-0 quiz_options">
@@ -234,6 +235,10 @@
                         <span class="input-group-text">Clue Text</span>
                     </div>
                     <input id="clueText" type="text" class="form-control" value="" />
+                </div>
+                <div class="d-flex justify-content-around align-items-center">
+                    <textarea style="width: 70%;" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control bulk_value" rows="1"></textarea>
+                    <button class="btn-outline-info btn-sm" id="bulk">Make Options</button>
                 </div>
                 <div class="h6 mr-3">Options</div>
                 <div class="w-100 m-0 p-0 quiz_options">
@@ -260,9 +265,10 @@
                 <div class="w-100 m-0 p-0 quiz_options">
                     <div class="input-group my-2 option">
                         <div class="h6">Column</div>
-                        <div class="d-flex w-100">
+                        <div class="d-flex w-100 h-auto">
                             <div class="input-group">
-                                <textarea class="form-control option_value" rows="5"></textarea>
+                                <!--<div class="option_value border p-2 w-100" contenteditable="true"></div>-->
+                                <textarea oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control option_value" rows="1"></textarea>
                             </div>
                             <button class="del">X</button>
                         </div>
