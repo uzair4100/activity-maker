@@ -11,7 +11,7 @@
         "pack": "electron-builder --dir",
         "dist": "electron-builder -p --always",
         "win": "electron-builder --windows nsis:ia32",
-        "publish": "electron-builder --win --ia32 -p always",
+        "publish": "electron-builder --win --ia32 --publish never",
         "dev": "nodemon --watch * --exec \"electron . --debug\" -e js,json,html,css"
     },
     "build": {
@@ -23,7 +23,6 @@
             "repo": "activity-maker"
         }],
         "win": {
-
             "publish": [
                 "github"
             ],
@@ -42,6 +41,7 @@
         "electron-builder": "^22.8.0",
         "electron-packager": "^14.2.1",
         "electron-prebuilt": "^1.4.13",
+        "electron-simple-publisher": "^2.0.0",
         "nodemon": "^2.0.7"
     },
     "dependencies": {

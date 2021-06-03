@@ -15,13 +15,13 @@ var filePath, optionValue, help, helpContent, activity, textSelected, quiz = "",
     audioFiles = [];
 var source = path.join(require("os").homedir(), "id01/content.xml");
 //xml templates
-var selectItem = path.join(__dirname, "template/selectitem.xml");
-var verticalArrange = path.join(__dirname, "template/verticalarrange.xml");
-var horizontalArrange = path.join(__dirname, "template/horizontalarrange.xml");
-var sentenceBuilder = path.join(__dirname, "template/sentencebuilder.xml");
-var multipleChoice = path.join(__dirname, "template/multiplechoice.xml");
-var dragCategory = path.join(__dirname, "template/dragcategory.xml");
-var textinput = path.join(__dirname, "template/textinput.xml");
+var selectItem = "\\\\vsl-file01\\coursesdev$\\template\\Select Item\\selectitem.xml";
+var verticalArrange = "\\\\vsl-file01\\coursesdev$\\template\\Vertical Arrange\\verticalarrange.xml";
+var horizontalArrange = "\\\\vsl-file01\\coursesdev$\\template\\Horizontal Arrange\\horizontalarrange.xml";
+var sentenceBuilder = "\\\\vsl-file01\\coursesdev$\\template\\Sentence Builder\\sentencebuilder.xml";
+var multipleChoice = "\\\\vsl-file01\\coursesdev$\\template\\Multiple Choice\\multiplechoice.xml";
+var dragCategory = "\\\\vsl-file01\\coursesdev$\\template\\Drag Category\\dragcategory.xml";
+var textinput = "\\\\vsl-file01\\coursesdev$\\template\\Text Input\\textinput.xml";
 //html templates
 var selectitemQuiz = document.querySelector(".selectitem").outerHTML;
 var verticalarrangeQuiz = document.querySelector(".verticalarrange").outerHTML;
@@ -34,7 +34,7 @@ var textinputQuiz = document.querySelector(".textinput").outerHTML;
 var quizContainer = document.getElementById("quiz_container");
 const status = document.getElementById("status");
 const activityType = document.getElementById("activityType");
-const templateFolder = path.join(__dirname, "template");
+const templateFolder = "\\\\vsl-file01\\coursesdev$\\template";
 const fullstops = [".", "。", "|", "?", "!"];
 const wrap = document.getElementById("wrap");
 const languages = document.getElementById("languages");
@@ -60,11 +60,11 @@ document.querySelector("#load").addEventListener("click", function() {
         fileExist ? activity = activityFinder(filePath) : activity = activityType.options[activityType.selectedIndex].text.trim();
         console.log(activity)
         let contentFile = path.join(filePath, "content.xml");
-
+        // copyFiles(activity)
         //find template
         switch (activity) {
             case "Select Item":
-                audioFiles = ["correct.mp3", "prompt.mp3", "select.mp3", "wrong.mp3"];
+                //   audioFiles = ["correct.mp3", "prompt.mp3", "select.mp3", "wrong.mp3"];
                 fetcher(fileExist, loadSI(contentFile), filePath, selectitemQuiz);
                 break;
 
@@ -361,9 +361,10 @@ document.querySelector("#submit").addEventListener("click", function() {
         !fs.existsSync(filePath) ? fs.mkdirSync(filePath) : "";
         fs.writeFile(path.join(filePath, "content.xml"), content, function(err) {
             if (!err) {
-                copyFiles();
-                (help != undefined && help != "") ? fs.writeFileSync(path.join(filePath, "help.html"), help): "";
                 displayMessage(`updated ${name}`, 3000);
+                copyFiles(activity)
+                    (help != undefined && help != "") ? fs.writeFileSync(path.join(filePath, "help.html"), help) : "";
+
             } else {
                 console.log(err)
             }
@@ -469,8 +470,8 @@ function arrange(classname) {
     }
 }
 
-function copyFiles() {
-    let files = fs.readdirSync(templateFolder).filter(file => path.extname(file) == ".mp3");
+function copyFiles(act) {
+    /*let files = fs.readdirSync(templateFolder).filter(file => path.extname(file) == ".mp3");
     console.log(files)
     files.forEach(file => {
         let src = path.join(templateFolder, file);
@@ -483,7 +484,29 @@ function copyFiles() {
                 })
         }
 
-    });
+    });*/
+    let folder = path.join(templateFolder, act)
+    let hasFla = fs.readdirSync(filePath).filter(file => path.extname(file) == ".fla");
+    console.log(hasFla)
+    let files = fs.readdirSync(folder).filter(file => path.extname(file) != ".xml");
+    files.forEach(function(file) {
+        let src = path.join(folder, file);
+        let dest = path.join(filePath, file);
+        if (path.extname(src) == ".fla") {
+            if (hasFla.length < 1) {
+                copy(src, dest)
+                    .then(function(results) {
+                        console.log('Copied ' + results.length + ' files');
+                    })
+            }
+        } else {
+            copy(src, dest)
+                .then(function(results) {
+                    console.log('Copied ' + results.length + ' files');
+                })
+        }
+
+    })
 }
 
 function attrRemover() {
