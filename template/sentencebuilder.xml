@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<content>
+	<activity></activity>
+	<frames  random="no" _debugFrame="14">
+		<frame num="1">		
+			<action type="waitStart"></action>			
+		</frame>
+
+		<end>	
+		</end>
+		
+	</frames>
+		
+</content>

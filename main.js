@@ -13,6 +13,7 @@ app.on('ready', function() {
 
     //creat new window
     mainWindow = new BrowserWindow({
+
         minWidth: 900,
         minHeight: 1010,
         width: 900,
@@ -37,6 +38,7 @@ app.on('ready', function() {
 
         var chooseFileOptions = {
             title: 'Choose activity Folder',
+            defaultPath: '\\vsl-file01\coursesdev$\courses\2021\vietnamese\year11\ws_17',
             buttonLabel: 'Select',
             properties: [
                 'openDirectory',

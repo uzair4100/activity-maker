@@ -21,6 +21,7 @@ var horizontalArrange = path.join(__dirname, "template/horizontalarrange.xml");
 var sentenceBuilder = path.join(__dirname, "template/sentencebuilder.xml");
 var multipleChoice = path.join(__dirname, "template/multiplechoice.xml");
 var dragCategory = path.join(__dirname, "template/dragcategory.xml");
+var textinput = path.join(__dirname, "template/textinput.xml");
 //html templates
 var selectitemQuiz = document.querySelector(".selectitem").outerHTML;
 var verticalarrangeQuiz = document.querySelector(".verticalarrange").outerHTML;
@@ -28,12 +29,13 @@ var horizontalarrangeQuiz = document.querySelector(".horizontalarrange").outerHT
 var sentencebuilderQuiz = document.querySelector(".sentencebuilder").outerHTML;
 var multiplechoiceQuiz = document.querySelector(".multiplechoice").outerHTML;
 var dragcategoryQuiz = document.querySelector(".dragcategory").outerHTML;
+var textinputQuiz = document.querySelector(".textinput").outerHTML;
 
 var quizContainer = document.getElementById("quiz_container");
 const status = document.getElementById("status");
 const activityType = document.getElementById("activityType");
 const templateFolder = path.join(__dirname, "template");
-const fullstops = [".", "。", "|", "?"];
+const fullstops = [".", "。", "|", "?", "!"];
 const wrap = document.getElementById("wrap");
 const languages = document.getElementById("languages");
 status.style.display = "none"
@@ -47,7 +49,7 @@ structure.style.display = "none";
 
 //load activity event handler
 document.querySelector("#load").addEventListener("click", function() {
-    if (filePath.length && typeof(filePath) !== undefined && filePath != "") {
+    if (typeof(filePath) !== undefined && filePath != "") {
         help = "";
         filePath = document.querySelector("#filePath").value;
         attrRemover()
@@ -93,6 +95,12 @@ document.querySelector("#load").addEventListener("click", function() {
                 document.getElementById("duplicate").setAttribute("disabled", true);
                 audioFiles = ["drop.mp3"];
                 fetcher(fileExist, loadDC(contentFile), filePath, dragcategoryQuiz);
+                break;
+
+            case "Text Input":
+                //document.getElementById("duplicate").setAttribute("disabled", true);
+                audioFiles = ["correct.mp3", "prompt.mp3"];
+                fetcher(fileExist, loadTI(contentFile), filePath, textinputQuiz);
                 break;
             default:
                 quizContainer.innerHTML = "Invalid Activity Type!";
@@ -233,6 +241,9 @@ document.addEventListener("click", function(e) {
             case "Drag Category":
                 quiz = dragcategoryQuiz;
                 break;
+            case "Text Input":
+                quiz = textinputQuiz;
+                break;
         }
         quizContainer.insertAdjacentHTML("beforeend", quiz);
         quizContainer.lastElementChild.classList.add('fadeIn');
@@ -334,6 +345,15 @@ document.querySelector("#submit").addEventListener("click", function() {
                     //  content = content.replace(/>\s+</g, "><"); //regex to keep target element in same line
                 console.log(content)
                 break;
+
+            case "Text Input":
+                xmlTemplate = fs.readFileSync(textinput, "utf-8");
+                console.log(xmlTemplate)
+
+                content = updateTI(xmlTemplate);
+                content = prettifyXml(content, { indent: 4 })
+                console.log(content)
+                break;
             default:
                 quizContainer.innerHTML = "Invalid Template";
         }
@@ -373,6 +393,9 @@ function activityFinder(filePath) {
     }
     if ($("action[type=validateChoices]").length) {
         Type = "Select Item";
+    }
+    if ($("action[type=setHTML]").length) {
+        Type = "Text Input";
     }
     if ($("item[type=sentenceButtons]").length) {
         Type = "Sentence Builder";

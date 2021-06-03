@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?> 
+<content>
+	<activity>Languages Online</activity>
+	<questions style="1" random="no" textwidthfiddle="6" textoffsetfiddle="2" interwordspacing="3" cornerradius="6">
+	
+		<quiz audio="s001.mp3">[他][把][今天的][练习][做完了]。</quiz>
+			
+	</questions> 
+</content>

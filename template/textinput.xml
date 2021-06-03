@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<content>
+	<activity>Languages Online, Section 15, No. 08 Scrivi le parole</activity>
+	<frames random="no" _debugFrame="2">
+		<frame num="1">
+			<action type="waitStart"></action>
+
+		</frame>
+
+
+
+		<frame num="2"> 
+			<action type="setHTML" tbox="txt0" holder="0" clue="0"><![CDATA[Burkina Faso, le 5 janvier &#xA; Cher Germain, &#xA; Merci beaucoup de ta lettre. Oui, je veux bien correspondre avec toi. Il n'y a pas d'ordinateur à mon école, alors on ~________~ <b><font color="#800000">(s'envoyer)</font></b> des lettres, d'accord ? Les lettres n'~________~ <b><font color="#800000">(arriver)</font></b> pas aussi vite que les messages électroniques, mais j'~________~ <b><font color="#800000">(espérer)</font></b> que tu auras la patience d'attendre. &#xA;Je ~________~ <b><font color="#800000">(s'appeler)</font></b> Abdullah et j'ai seize ans. J'~________~ <b><font color="#800000">(habiter)</font></b> un petit village du Burkina Faso, un pays situé au centre-ouest de l'Afrique. Nous, les habitants du Burkina Faso, nous ~________~ <b><font color="#800000">(s'appeler)</font></b> les Burkinabés. J'ai quatre frères et trois sœurs. Mon père ~________~ <b><font color="#800000">(posséder)</font></b> un petit morceau de terre, où nous ~_________~ <b><font color="#800000">(cultiver)</font></b> du mil, la seule céréale qui pousse sur notre terre aride. Notre village est situé au nord du pays, tout près du désert. Le désert ~________~ <b><font color="#800000">(avancer)</font></b> chaque année et cela pose de grands problèmes. Les vents violents ~_________~ <b><font color="#800000">(souffler)</font></b> du désert et ~__________~ <b><font color="#800000">(détruire)</font></b> le sol, qui ~________~ <b><font color="#800000">(devenir)</font></b> comme de la poussière.   &#xA;Toute la famille ~________~ <b><font color="#800000">(se lever)</font></b> de bonne heure. Mes frères aînés et moi, nous ~____________~ <b><font color="#800000">(commencer)</font></b> la journée en allant chercher de l'eau au puits du village. C'est dur. Les seaux sont grands et lourds : chaque seau ~_____~ <b><font color="#800000">(peser)</font></b> 10-12 kilos. Mais ça c'est quand il y a de l'eau. Souvent la chaleur et les vents ~________~ <b><font color="#800000">(assécher)</font></b> le puits, alors, on ~_______~ <b><font color="#800000">(acheter)</font></b> de l'eau.   &#xA; C'est cher : on ~_____~ <b><font color="#800000">(payer)</font></b> 5 francs le seau. Pendant les mois de sécheresse nous ~___________~ <b><font color="#800000">(partager)</font></b> le peu d'eau qu'on ~_______~<b><font color="#800000">(amener)</font></b> de loin.   &#xA;Nous ~_________~ <b><font color="#800000">(essayer)</font></b> de faire des provisions et d'économiser. Nous avons un jardin derrière l'école où nous cultivons des légumes. Nous ~__________~ <b><font color="#800000">(protéger)</font></b> nos potagers et nos jardins avec des barrages et des murs de terre. Ainsi, nous ~_______~  <b><font color="#800000">(lutter)</font></b> contre l'avancée du désert. Nous ~__________~ <b><font color="#800000">(manger)</font></b> nos légumes à la cantine de l'école.&#xA; Comme tu ~_____~ <b><font color="#800000">(voir)</font></b>, nous ne nous ~_________~ <b><font color="#800000">(ennuyer)</font></b> pas. Quand j'ai du temps libre, j'aime lire. Et toi, qu'est-ce que tu ~________~ <b><font color="#800000">(préférer)</font></b> comme loisirs ? Parle-moi de ta vie, de ta famille, de ton école.&#xA;Amitiés,&#xA;Abdullah]]></action>   		<item type="checkButton" btn="btnCheck">
+				<action type="setVar" variable="test0" val="0" />
+				<action type="test" tbox="inputTXT0" sensitive="yes" mark="mark0" variable="test0" clue="0">s'envoie|s’envoie</action>
+				<action type="test" tbox="inputTXT1" sensitive="yes" mark="mark1" variable="test0" clue="0">arrivent</action>
+				<action type="test" tbox="inputTXT2" sensitive="yes" mark="mark2" variable="test0" clue="0">espère</action>
+				<action type="test" tbox="inputTXT3" sensitive="yes" mark="mark3" variable="test0" clue="0">m'appelle|m’appelle</action>
+				<action type="test" tbox="inputTXT4" sensitive="yes" mark="mark4" variable="test0" clue="0">habite</action>
+				<action type="test" tbox="inputTXT5" sensitive="yes" mark="mark5" variable="test0" clue="0">nous appelons</action>
+				<action type="test" tbox="inputTXT6" sensitive="yes" mark="mark6" variable="test0" clue="0">possède</action>
+				<action type="test" tbox="inputTXT7" sensitive="yes" mark="mark7" variable="test0" clue="0">cultivons</action>
+				<action type="test" tbox="inputTXT8" sensitive="yes" mark="mark8" variable="test0" clue="0">avance</action>
+				<action type="test" tbox="inputTXT9" sensitive="yes" mark="mark9" variable="test0" clue="0">soufflent</action>
+				<action type="test" tbox="inputTXT10" sensitive="yes" mark="mark10" variable="test0" clue="0">détruisent</action>
+				<action type="test" tbox="inputTXT11" sensitive="yes" mark="mark11" variable="test0" clue="0">devient</action>
+				<action type="test" tbox="inputTXT12" sensitive="yes" mark="mark12" variable="test0" clue="0">se lève</action>
+				<action type="test" tbox="inputTXT13" sensitive="yes" mark="mark13" variable="test0" clue="0">commençons</action>
+				<action type="test" tbox="inputTXT14" sensitive="yes" mark="mark14" variable="test0" clue="0">pèse</action>
+				<action type="test" tbox="inputTXT15" sensitive="yes" mark="mark15" variable="test0" clue="0">assèchent</action>
+				<action type="test" tbox="inputTXT16" sensitive="yes" mark="mark16" variable="test0" clue="0">achète</action>
+				<action type="test" tbox="inputTXT17" sensitive="yes" mark="mark17" variable="test0" clue="0">paie|paye</action>
+				<action type="test" tbox="inputTXT18" sensitive="yes" mark="mark18" variable="test0" clue="0">partageons</action>
+				<action type="test" tbox="inputTXT19" sensitive="yes" mark="mark19" variable="test0" clue="0">amène</action>
+				<action type="test" tbox="inputTXT20" sensitive="yes" mark="mark20" variable="test0" clue="0">essayons</action>
+				<action type="test" tbox="inputTXT21" sensitive="yes" mark="mark21" variable="test0" clue="0">protégeons</action>
+				<action type="test" tbox="inputTXT22" sensitive="yes" mark="mark22" variable="test0" clue="0">luttons</action>
+				<action type="test" tbox="inputTXT23" sensitive="yes" mark="mark23" variable="test0" clue="0">mangeons</action>
+				<action type="test" tbox="inputTXT24" sensitive="yes" mark="mark24" variable="test0" clue="0">vois</action>
+				<action type="test" tbox="inputTXT25" sensitive="yes" mark="mark25" variable="test0" clue="0">ennuyons</action>
+				<action type="test" tbox="inputTXT26" sensitive="yes" mark="mark26" variable="test0" clue="0">préfères</action>
+				<action type="validateTest" variable="test0" test="==" val="27">
+					<passed>
+						  <action type="hide" sym="btnCheck" /> 
+						<action type="continueAction" actionId="test0" /> 
+					  </passed>
+					<failed>
+					- <!--  not implemented yet 
+					  --> 
+					  </failed>
+				  </action>
+			  </item>
+			    <action type="waitTest" /> 
+			<action type="hide" sym="btnCheck"></action>
+			<action type="hide" sym="mark0"></action>
+			<action type="hide" sym="mark1"></action>
+			<action type="hide" sym="mark2"></action>
+			<action type="hide" sym="mark3"></action>
+			<action type="hide" sym="mark4"></action>
+			<action type="hide" sym="mark5"></action>
+			<action type="hide" sym="mark6"></action>
+			<action type="hide" sym="mark7"></action>
+			<action type="hide" sym="mark8"></action>
+			<action type="hide" sym="mark9"></action>
+			<action type="hide" sym="mark10"></action>
+			<action type="hide" sym="mark11"></action>
+			<action type="hide" sym="mark12"></action>
+			<action type="hide" sym="mark13"></action>
+			<action type="hide" sym="mark14"></action>
+			<action type="hide" sym="mark15"></action>
+			<action type="hide" sym="mark16"></action>
+			<action type="hide" sym="mark17"></action>
+			<action type="hide" sym="mark18"></action>
+			<action type="hide" sym="mark19"></action>
+			<action type="hide" sym="mark20"></action>
+			<action type="hide" sym="mark21"></action>
+			<action type="hide" sym="mark22"></action>
+			<action type="hide" sym="mark23"></action>
+			<action type="hide" sym="mark24"></action>
+			<action type="hide" sym="mark25"></action>
+			<action type="hide" sym="mark26"></action>
+			
+			<action type="delay" secs="2"></action>
+		</frame>
+		
+
+	</frames>
+</content>

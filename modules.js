@@ -636,24 +636,38 @@ function loadDC(contentXML) {
                 let no = i + 1;
                 let optns = $(this).find("item[type=drag]");
                 let opt = "",
-                    allOptions = [];
-
+                    allOptions = [],
+                    allTargets = [],
+                    decoys = [];
                 let targets = $(this).find("item[type=target]");
                 targets.each(function() {
                     let targetNames = $(this).attr("names").split("|");
                     console.log(targetNames)
-
                     let optionTemplate = new DOMParser().parseFromString(template.querySelector(".quiz_options").innerHTML, "text/html");
                     optns.each(function() {
                         if (targetNames.includes($(this).attr("name"))) {
-                            allOptions.push($(this).text())
+                            allOptions.push($(this).text());
+                            allTargets.push($(this).text());
                         }
                     }); //end option loop
                     console.log(allOptions);
                     optionTemplate.querySelector(".option_value").innerHTML = allOptions.join("\n");
+                    // decoys != null ? optionTemplate.querySelector(".h6").innerHTML = "Decoys" : "";
                     opt += optionTemplate.body.innerHTML;
                     allOptions = []
                 });
+                console.log(allTargets);
+
+                optns.filter(function() {
+                    return !allTargets.includes($(this).html())
+                }).map(function() {
+                    decoys.push($(this).text())
+                })
+                console.log(decoys)
+                let decoyTemplate = new DOMParser().parseFromString(template.querySelector(".quiz_options").innerHTML, "text/html");
+                decoyTemplate.querySelector(".option_value").innerHTML = decoys.join("\n");
+                decoyTemplate.querySelector(".h6").innerHTML = "Decoys";
+                opt += decoyTemplate.body.innerHTML;
 
                 template.querySelector(".quiz_options").innerHTML = opt;
 
@@ -671,6 +685,129 @@ function loadDC(contentXML) {
 }
 
 function updateDC(XML) {
+    //change dom value
+    let option_value = quizContainer.querySelectorAll(".option_value");
+    for (let t = 0; t < option_value.length; t++) {
+        option_value[t].innerHTML = option_value[t].value;
+    }
+
+    let template = new DOMParser().parseFromString(XML, "application/xml");
+    console.log(template)
+
+    let actName = filePath.split("\\");
+    let name = actName[6] + " " + actName[8] + "/" + actName[9];
+    let quizzes = new DOMParser().parseFromString(quizContainer.innerHTML, "text/html")
+    let quizzesArray = quizzes.querySelectorAll(".dragcategory");
+
+    let data = "",
+        content = "";
+    //loop through quizzes
+    for (let i = 0; i < quizzesArray.length; i++) {
+        let no = i + 2;
+        let quiz = quizzesArray[i],
+            opt = "",
+            values = [],
+            targets = [];
+        //let clueText = quiz.querySelector("#clueText").getAttribute("value").trim();
+
+        //loop through options
+        let options = quiz.querySelectorAll(".option");
+        console.log(options)
+        let dragCount = 0;
+        //add all option values in one array
+        for (let j = 0; j < options.length; j++) {
+            let isDecoy = false;
+            let targetNames = []
+            let opt_text = options[j].querySelector(".option_value").innerHTML;
+            // options[j].querySelector(".h6").innerHTML == "Decoys" ? isDecoy = true : "";   //set decoy to true
+            if (opt_text.length) {
+                let column = opt_text.split("\n");
+                console.log(column.length)
+                values = values.concat(opt_text.split("\n"));
+                console.log(values)
+                values.filter(val => typeof(val) !== undefined && val != "").map((val, v) => {
+                    opt += `<item type="drag" sym="d${dragCount}"  persist="yes" group="group0" visible="no" frame="1" name="d${dragCount}">${val.toString().trim()}</item>`
+                    targetNames.push(`d${dragCount}`);
+                    dragCount++;
+                });
+                targetNames = targetNames.join("|").toString();
+                targets.push(`<item type="target" sym="tg${j}" names="${targetNames}"/>`);
+                targetNames = [];
+            }
+            values = [];
+        }
+
+
+        console.log(opt)
+        console.log(targets)
+        let frameContent = `<frame num="${no}">
+                                ${opt}${"\n\n"}
+                                ${targets.join("").toString()}
+                                <item type="button" btn="btnCheck" visible="no">
+                                    <action type="validateDragItems" mark="mark" lockCorrect="yes"/>
+                                </item>
+                                <action type="randomiseGroup" group="group0"/>
+                                <action type="showDragGroup" group="group0"/>
+                                <action type="show" sym="btnCheck"/>
+                                <action type="waitTest"></action>
+                                <action type="hide" sym="btnCheck"/>
+                                <action type="delay" secs="2"/>
+                            </frame>${"\n\n"}`;
+
+        data += frameContent;
+    } //end loop
+    //data = data.replace(/\&nbsp;/g, '');
+    data = prettifyXml(data, { indent: 4 })
+    template.querySelector("activity").innerHTML = name;
+    template.querySelector("end").insertAdjacentHTML("beforebegin", data);
+    content = new XMLSerializer().serializeToString(template);;
+    return content;
+}
+
+/////////////////////////////////////////////////////// TEXT INPUT ///////////////////////////////////////////////////////////////////
+function loadTI(contentXML) {
+    return new Promise(function(resolve, reject) {
+
+            let fileContent = fs.readFileSync(contentXML, "utf-8");
+            let $ = cheerio.load(fileContent, { xmlMode: true, decodeEntities: false });
+            let data = "";
+
+            $("frame:not(:eq(0))").each(function(i) {
+
+                let template = new DOMParser().parseFromString(textinputQuiz, "text/html");
+                let optionTemplate = new DOMParser().parseFromString(template.querySelector(".quiz_options").innerHTML, "text/html");
+                let no = i + 1;
+                let sentence = $(this).find("action[type=setHTML]").text();
+                let optns = $(this).find("action[type=test]");
+                let allOptions = [];
+
+                optns.each(function() {
+                    let opt_text = $(this).text();
+
+                    // 
+
+                    //  optionTemplate.querySelector(".option_value").innerHTML = optText;
+                    // opt += optionTemplate.body.innerHTML;
+                    allOptions.push(opt_text)
+                });
+                template.querySelector("#clueText").innerHTML = sentence;
+                template.querySelector(".option_value").innerHTML = allOptions.join("\n");
+                template.querySelector(".no").innerHTML = no;
+
+                data += template.body.innerHTML;
+            }); //end outer loop
+
+            if (data) {
+                //console.log(data);
+                quizContainer.innerHTML = data;
+                resolve("loaded");
+            } else {
+                reject("Could not load activity!")
+            }
+        }) //return 
+}
+
+function updateTI(XML) {
     //change dom value
     let option_value = quizContainer.querySelectorAll(".option_value");
     for (let t = 0; t < option_value.length; t++) {

@@ -1,0 +1,13 @@
+directories:
+  output: dist
+  buildResources: build
+appId: com.activity.quickstart
+publish:
+  - provider: github
+    owner: uzair4100
+    repo: activity-maker
+win:
+  publish:
+    - github
+  target: nsis
+electronVersion: 1.4.13

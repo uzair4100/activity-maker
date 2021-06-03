@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<data>
+	<frames _random="yes"  _sets="1,2|3,4|5,6">
+		<start>
+			<item type="clickableButton" id="btn0" x="235" y="30" src="../images/start_button.png" alt="Start button">
+			<item type="nextFrame"/>
+			</item>
+		</start>
+
+
+	<end>
+		<item type="background" id="bg" >welldone.png</item>
+	</end>
+
+	</frames>
+</data>
