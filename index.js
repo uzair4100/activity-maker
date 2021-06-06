@@ -11,7 +11,7 @@ const copy = require('recursive-copy');
 
 
 //variables
-var filePath, optionValue, help, helpContent, activity, textSelected, quiz = "",
+var filePath, optionValue, help="", helpContent="", activity, textSelected, quiz = "",
     audioFiles = [];
 var source = path.join(require("os").homedir(), "id01/content.xml");
 //xml templates
@@ -39,17 +39,39 @@ const fullstops = [".", "。", "|", "?", "!"];
 const wrap = document.getElementById("wrap");
 const languages = document.getElementById("languages");
 status.style.display = "none"
-var appVersion = electron.remote.app.getVersion();
-const dialog = electron.remote.dialog;
+const dialog = electron.dialog;
 
-console.log(appVersion)
 
 var structure = document.querySelector("#structure");
+var modal = document.querySelector("#modal");
 structure.style.display = "none";
+modal.style.display="none";
+
+
+//catch updater event
+ipcRenderer.on('checking', function(event, text) {
+    console.log(text)
+ })
+ipcRenderer.on('not-available', function(event, text) {
+    console.log(text)
+})
+ipcRenderer.on('update', function(event,text) {
+    modal.style.display = "";
+    displayUpdateStatus(modal,text, 90000);
+})
+ipcRenderer.on('downloading', function(event,percent) {
+    displayUpdateStatus(modal,"Downloading Update", 90000);
+    let bar=`<div id="bar" class="progress-bar progress-bar-striped text-white text-bold" role="progressbar" style="width:${percent}" aria-valuemin="0" aria-valuemax="100">${percent}</div>`;
+    document.querySelector(".progress").innerHTML=bar;
+})
+ipcRenderer.on('downloaded', function(event,text) {
+    displayUpdateStatus(modal,text, 1000);
+   // modal.style.display="none";
+})
 
 //load activity event handler
 document.querySelector("#load").addEventListener("click", function() {
-    if (typeof(filePath) !== undefined && filePath != "") {
+   // if (typeof(filePath) !== undefined && filePath != "") {
         help = "";
         filePath = document.querySelector("#filePath").value;
         attrRemover()
@@ -105,9 +127,9 @@ document.querySelector("#load").addEventListener("click", function() {
             default:
                 quizContainer.innerHTML = "Invalid Activity Type!";
         }
-    } else {
-        quizContainer.innerHTML = "Choose Path";
-    }
+  //  } else {
+    //    quizContainer.innerHTML = "Choose Path";
+    //}
 });
 
 /////////////////////find source path/////////////////////////////////////////
@@ -115,9 +137,11 @@ document.getElementById("chooseFile").addEventListener("click", function() {
     ipcRenderer.send("chooseFile-dialog"); //send choose file event
 
     //receive choosefile event
-    ipcRenderer.on("chooseFile-selected", function(event, folders) {
-        document.getElementById("filePath").value = folders[0];
+    ipcRenderer.on("chooseFile-selected", function(err,folder) {
+        console.log(folder.filePaths[0])
+        document.getElementById("filePath").value = folder.filePaths[0];
         filePath = document.getElementById("filePath").value;
+        console.log(filePath)
     });
 
 }); //end source path
@@ -275,6 +299,7 @@ document.addEventListener("click", function(e) {
     }
 
     if (button.id == "help") {
+        helpContent=""
         ipcRenderer.send("help-window", helpContent); //send event to main window to open modal window
 
         //receive form data
@@ -361,9 +386,9 @@ document.querySelector("#submit").addEventListener("click", function() {
         !fs.existsSync(filePath) ? fs.mkdirSync(filePath) : "";
         fs.writeFile(path.join(filePath, "content.xml"), content, function(err) {
             if (!err) {
-                displayMessage(`updated ${name}`, 3000);
+                displayMessage(status,`updated ${name}`, 3000);
                 copyFiles(activity)
-                    (help != undefined && help != "") ? fs.writeFileSync(path.join(filePath, "help.html"), help) : "";
+            help.length? fs.writeFileSync(path.join(filePath, "help.html"), help):"" ;
 
             } else {
                 console.log(err)
@@ -471,20 +496,7 @@ function arrange(classname) {
 }
 
 function copyFiles(act) {
-    /*let files = fs.readdirSync(templateFolder).filter(file => path.extname(file) == ".mp3");
-    console.log(files)
-    files.forEach(file => {
-        let src = path.join(templateFolder, file);
-        let dest = path.join(filePath, file);
-        //   console.log(src + ",," + dest)
-        if (audioFiles.includes(file)) {
-            copy(src, dest)
-                .then(function(results) {
-                    console.info('Copied ' + results.length + ' files');
-                })
-        }
 
-    });*/
     let folder = path.join(templateFolder, act)
     let hasFla = fs.readdirSync(filePath).filter(file => path.extname(file) == ".fla");
     console.log(hasFla)
@@ -533,14 +545,19 @@ function auto_grow(element) {
 }
 
 
-function displayMessage(msg, duration) {
+function displayMessage(status,msg, duration) {
     status.style.display = "";
     status.innerHTML = msg;
     setTimeout(function() {
         status.style.display = "none";
     }, duration);
 }
-
+function displayUpdateStatus(modal,msg, duration) {
+    document.querySelector(".card-text").innerHTML = msg;
+    setTimeout(function() {
+        modal.style.display = "none";
+    }, duration);
+}
 //clear app
 document.querySelector("#clear").addEventListener("click", function() {
     location.reload();

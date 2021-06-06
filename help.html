@@ -72,6 +72,8 @@
         add.addEventListener("click", function(e) {
 
             let data = editor.root.innerHTML;
+            data=new DOMParser().parseFromString(data,"text/html");
+            data.body.innerText.length?data=data.body.innerHTML:data="";
             console.log(data);
             ipcRenderer.send("help-data", data);
         });

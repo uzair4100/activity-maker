@@ -1,6 +1,7 @@
 {
     "name": "activity-maker",
-    "version": "1.0.5",
+    "version": "1.0.0",
+    "repository": "https://github.com/uzair4100/activity-maker",
     "description": "Make interactives",
     "author": "Uzair",
     "license": "MIT",
@@ -9,44 +10,46 @@
         "test": "echo \"Error: no test specified\" && exit 1",
         "start": "electron .",
         "pack": "electron-builder --dir",
-        "dist": "electron-builder -p --always",
-        "win": "electron-builder --windows nsis:ia32",
-        "publish": "electron-builder --win --ia32 --publish never",
+        "dist": "electron-builder",
+        "publish": "electron-builder --win --x64 -p always",
         "dev": "nodemon --watch * --exec \"electron . --debug\" -e js,json,html,css"
     },
     "build": {
         "appId": "com.activity.quickstart",
         "productName": "activity maker",
-        "publish": [{
-            "provider": "github",
-            "owner": "uzair4100",
-            "repo": "activity-maker"
-        }],
+        "publish": [
+            {
+                "provider": "github",
+                "owner": "uzair4100",
+                "repo": "activity-maker"
+            }
+        ],
         "win": {
             "publish": [
                 "github"
             ],
-            "target": [{
-                "target": "nsis",
-                "arch": [
-                    "x64",
-                    "ia32"
-                ]
-            }]
+            "target": [
+                {
+                    "target": "nsis",
+                    "arch": [
+                        "x64"
+                    ]
+                }
+            ]
         }
     },
     "devDependencies": {
         "cross-env": "^7.0.1",
-        "electron": "^9.2.0",
-        "electron-builder": "^22.8.0",
-        "electron-packager": "^14.2.1",
+        "electron": "^12.0.2",
+        "electron-builder": "^20.20.4",
         "electron-prebuilt": "^1.4.13",
-        "electron-simple-publisher": "^2.0.0",
         "nodemon": "^2.0.7"
     },
     "dependencies": {
         "cheerio": "^1.0.0-rc.3",
+        "electron-auto-update": "^1.2.2",
         "electron-build": "0.0.3",
+        "electron-log": "^4.3.5",
         "electron-updater": "^4.3.9",
         "jquery": "^3.6.0",
         "open": "^7.0.4",
