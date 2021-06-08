@@ -11,7 +11,8 @@ function loadSB(contentXML) {
             let no = i + 1;
             let optns = $(this).find("option");
             let opt = "";
-            let clueText = $(this).find("item[type=sentenceButtons]").attr("sentence");
+            let clueText = $(this).find("action[type=setText]").text().trim(); //text beacuse it may be in CDATA
+            let sentence = $(this).find("item[type=sentenceButtons]").attr("sentence").trim();
             //set options
             optns.each(function() {
                 let optionTemplate = new DOMParser().parseFromString(template.querySelector(".quiz_options").innerHTML, "text/html");
@@ -21,9 +22,10 @@ function loadSB(contentXML) {
                 optionTemplate.querySelector(".option_value").setAttribute("value", optText);
                 opt += optionTemplate.body.innerHTML;
             }); //end option loop
-
+            console.log(clueText)
             template.querySelector(".quiz_options").innerHTML = opt;
             template.querySelector("#clueText").innerHTML = clueText;
+            template.querySelector("#sentence").innerHTML = sentence;
             template.querySelector(".no").innerHTML = no;
 
             data += template.body.innerHTML;
@@ -64,10 +66,11 @@ function updateSB(XML) {
     //loop through quizzes
     for (let i = 0; i < quizzesArray.length; i++) {
         let quiz = quizzesArray[i];
+        let sentence = quiz.querySelector("#sentence").innerHTML;
         let clueText = quiz.querySelector("#clueText").innerHTML;
-        let clue = "";
         let no = i + 2;
         let opt = "",
+            clueLine = "",
             values = [];
 
         //loop through options
@@ -82,17 +85,19 @@ function updateSB(XML) {
             }
         }
         values.filter(val => typeof(val) !== undefined && val != "").map((val, v) => opt += `<option sym="opt_${v}">${val.trim()}</option>`);
+        clueText ? clueLine = `<action type="setText" tbox="clueTxt"><![CDATA[${clueText}]]></action>` : clueLine = ""; //add clueline if cluetext exists
 
         let frameContent = `<frame num="${no}">
                                 <action type="playSound" file="prompt.mp3"></action>
                                 <action type="show" sym="btnCheck" />
                                 <action type="show" sym="btnClear" />
-                                <item type="sentenceButtons" randomise="yes" sentenceTextBox="sentenceText"  sentence="${clueText}" markSym="mark" >
+                                <item type="sentenceButtons" randomise="yes" sentenceTextBox="sentenceText"  sentence="${sentence}" markSym="mark" >
                                     <textbox sym="sentenceText" />
                                     <clearButton sym="btnClear" />
                                     <checkButton sym="btnCheck"/>
                                     ${opt}
                                 </item>
+                                ${clueLine}
                                 <action type="waitTest"></action>
                                 <action type="hide" sym="btnCheck" />
                                 <action type="hide" sym="btnClear" />
@@ -116,13 +121,11 @@ function loadSI(contentXML) {
             let fileContent = fs.readFileSync(contentXML, "utf-8");
             let $ = cheerio.load(fileContent, { xmlMode: true, decodeEntities: false });
             let data = "";
-            // document.querySelector("#onCorrect_audio")
             //find randomise option
             $("action[type=randomiseChoices]").length ? document.querySelector("#options_random").checked = true : "";
-            //find play audio
-            $("action[type=playSound]").attr('file') == "s001.mp3" ? document.querySelector("#onCorrect_audio").checked = true : "";
-
-            //  !$("passed").length ? reject("Invalid Activity Type") : ""; //reject if not select item
+            //find play audio on correct
+            $('passed').children("action[type=playSound]").attr('file') == "s001.mp3" ? document.querySelector("#onCorrect_audio").checked = true : "";
+            $("item[btn=Audio]").length ? document.querySelector("#clue_audio").checked = true : "";
 
             $("frame:not(:eq(0))").each(function(i) {
                 let template = new DOMParser().parseFromString(selectitemQuiz, "text/html");
@@ -196,10 +199,12 @@ function updateSI(XML) {
 
         let randomise = "",
             playAudio = "",
-            sound = "";
+            clueAudio = ""
+        sound = "";
         parseInt(i + 1) < 10 ? sound = `s00${i+1}` : sound = `s0${i+1}`;
         document.getElementById("options_random").checked == true ? (randomise = `<action type="randomiseChoices" />`) : randomise = "";
         document.getElementById("onCorrect_audio").checked == true ? (playAudio = `<action type="delay" secs="0.5"/><action type="playSound" wait="yes" file="${sound}.mp3"></action>`) : playAudio = "";
+        document.getElementById("clue_audio").checked == true ? (clueAudio = `<item type="button" btn="Audio"><action type="playSound" file="${sound}.mp3" wait="no"></action></item><action type="playSound" file="${sound}.mp3" wait="no"></action>`) : clueAudio = "";
         let opt = "",
             values = [];
 
@@ -243,7 +248,7 @@ function updateSI(XML) {
                         </item>                       
                         ${opt}${randomise}                     
                         ${clue}
-                        <action type="playSound" file="prompt.mp3" wait="yes"></action>
+                        <action type="playSound" file="prompt.mp3" wait="yes"></action>${clueAudio}
                         <action type="waitTest"></action>
                         <action type="delay" secs="1"/>
                     </frame>${"\n\n"}`;
@@ -642,12 +647,14 @@ function loadDC(contentXML) {
                 let targets = $(this).find("item[type=target]");
                 targets.each(function() {
                     let targetNames = $(this).attr("names").split("|");
+                    allTargets = allTargets.concat(targetNames) // push all d0,d1 etc in one array to find decoys at the end
                     console.log(targetNames)
+
                     let optionTemplate = new DOMParser().parseFromString(template.querySelector(".quiz_options").innerHTML, "text/html");
                     optns.each(function() {
                         if (targetNames.includes($(this).attr("name"))) {
                             allOptions.push($(this).text());
-                            allTargets.push($(this).text());
+                            //  allTargets.push($(this).text());
                         }
                     }); //end option loop
                     console.log(allOptions);
@@ -659,15 +666,18 @@ function loadDC(contentXML) {
                 console.log(allTargets);
 
                 optns.filter(function() {
-                    return !allTargets.includes($(this).html())
+                    return !allTargets.includes($(this).attr('name'))
                 }).map(function() {
                     decoys.push($(this).text())
                 })
                 console.log(decoys)
-                let decoyTemplate = new DOMParser().parseFromString(template.querySelector(".quiz_options").innerHTML, "text/html");
-                decoyTemplate.querySelector(".option_value").innerHTML = decoys.join("\n");
-                decoyTemplate.querySelector(".h6").innerHTML = "Decoys";
-                opt += decoyTemplate.body.innerHTML;
+                if (decoys.length) {
+                    let decoyTemplate = new DOMParser().parseFromString(template.querySelector(".quiz_options").innerHTML, "text/html");
+                    decoyTemplate.querySelector(".option_value").innerHTML = decoys.join("\n");
+                    decoyTemplate.querySelector(".h6").innerHTML = "Decoys";
+                    opt += decoyTemplate.body.innerHTML;
+                }
+
 
                 template.querySelector(".quiz_options").innerHTML = opt;
 

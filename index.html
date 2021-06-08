@@ -143,23 +143,27 @@
             </div>
         </div>
     </div>
-    <div id="templates">      
+    <div id="templates">
         <div class="w-100 p-0 quiz selectitem">
             <div class="bg-dark text-white w-100 d-flex justify-content-between px-1 heading">
                 <div class="no">1</div>
+                <button id="show_bulk" class="btn btn-outline-warning btn-sm">Make Bulk Option</button>
                 <div class="del_quiz">X</div>
             </div>
+
             <div class="border border-dark px-5 mb-2 w-100">
+                <div class="my-1 makeOptionWrapper">
+                    <textarea style="width: 70%;float:left;" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control bulk_value" rows="1"></textarea>
+                    <button style="float:right;" class="btn-outline-info btn-sm" id="bulk">Make Options</button>
+                </div>
+
                 <div class="input-group m-1">
                     <div class="input-group-prepend">
                         <span class="input-group-text">Clue Text</span>
                     </div>
                     <input id="clueText" type="text" class="form-control" value="" />
                 </div>
-                <div class="d-flex justify-content-around align-items-center">
-                    <textarea style="width: 70%;" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control bulk_value" rows="1"></textarea>
-                    <button class="btn-outline-info btn-sm" id="bulk">Make Options</button>
-                </div>
+
                 <div class="h6 mr-3">Options</div>
 
                 <div class="w-100 m-0 p-0 quiz_options">
@@ -213,13 +217,35 @@
         <div class="w-100 p-0 quiz sentencebuilder">
             <div class="bg-dark text-white w-100 d-flex justify-content-between px-1 heading">
                 <div class="no">1</div>
+                <button id="show_bulk" class="btn btn-outline-warning btn-sm">Make Bulk Option</button>
                 <div class="del_quiz">X</div>
             </div>
+
             <div class="border border-dark px-5 mb-2 w-100">
-                <div class="input-group my-1 d-flex align-items-center">
-                    <textarea id="clueText" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control sentence" rows="1"></textarea>
-                    <button id="wrap" class="btn-outline-info ml-2">Select</button>
+                <div class="my-1 makeOptionWrapper">
+                    <textarea style="width: 70%;float:left;" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control bulk_value" rows="1"></textarea>
+                    <button style="float:right;" class="btn-outline-info btn-sm" id="bulk">Make Options</button>
                 </div>
+
+                <div class="input-group m-1">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Clue Text</span>
+                    </div>
+                    <textarea id="clueText" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control sentence" rows="1"></textarea>
+                </div>
+
+                <div class="input-group my-1 d-flex align-items-center justify-content-between">
+                    <div class="input-group m-1">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">Sentence</span>
+                        </div>
+                        <textarea id="sentence" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control sentence" rows="1"></textarea>
+                        <div class="input-group-append">
+                            <button id="wrap" class="btn-outline-info h-50 ml-1">Wrap</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="h6 mr-3">Options</div>
                 <div class="w-100 m-0 p-0 quiz_options">
                     <div class="input-group mt-1 option">
@@ -234,19 +260,23 @@
         <div class="w-100 p-0 quiz multiplechoice">
             <div class="bg-dark text-white w-100 d-flex justify-content-between px-1 heading">
                 <div class="no">1</div>
+                <button id="show_bulk" class="btn btn-outline-warning btn-sm">Make Bulk Option</button>
                 <div class="del_quiz">X</div>
             </div>
+
             <div class="border border-dark px-5 mb-2 w-100">
+                <div class="my-1 makeOptionWrapper">
+                    <textarea style="width: 70%;float:left;" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control bulk_value" rows="1"></textarea>
+                    <button style="float:right;" class="btn-outline-info btn-sm" id="bulk">Make Options</button>
+                </div>
+
                 <div class="input-group m-1">
                     <div class="input-group-prepend">
                         <span class="input-group-text">Clue Text</span>
                     </div>
                     <input id="clueText" type="text" class="form-control" value="" />
                 </div>
-                <div class="d-flex justify-content-around align-items-center">
-                    <textarea style="width: 70%;" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control bulk_value" rows="1"></textarea>
-                    <button class="btn-outline-info btn-sm" id="bulk">Make Options</button>
-                </div>
+
                 <div class="h6 mr-3">Options</div>
                 <div class="w-100 m-0 p-0 quiz_options">
                     <div class="input-group mt-1 option">

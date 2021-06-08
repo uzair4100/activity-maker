@@ -55,9 +55,14 @@
                     modules: {
                         toolbar: [
                             [{
-                                header: [3, false]
+                                header: [3, false],
                             }],
-                            ['bold']
+                            ['bold'],
+                            [{
+                                'list': 'ordered'
+                            }, {
+                                'list': 'bullet'
+                            }]
                         ]
                     },
                     placeholder: "Instructions in language \n Instructions in English",
@@ -72,8 +77,8 @@
         add.addEventListener("click", function(e) {
 
             let data = editor.root.innerHTML;
-            data=new DOMParser().parseFromString(data,"text/html");
-            data.body.innerText.length?data=data.body.innerHTML:data="";
+            data = new DOMParser().parseFromString(data, "text/html");
+            data.body.innerText.length ? data = data.body.innerHTML : data = "";
             console.log(data);
             ipcRenderer.send("help-data", data);
         });

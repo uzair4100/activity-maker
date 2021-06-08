@@ -12,47 +12,41 @@
         "pack": "electron-builder --dir",
         "dist": "electron-builder",
         "publish": "electron-builder --win --x64 -p always",
-        "dev": "nodemon --watch * --exec \"electron . --debug\" -e js,json,html,css"
+        "dev": "nodemon --watch * --exec \"electron . --debug\" -e js,json,html,css",
+        "fix": "electron-fix start"
     },
     "build": {
         "appId": "com.activity.quickstart",
         "productName": "activity maker",
-        "publish": [
-            {
-                "provider": "github",
-                "owner": "uzair4100",
-                "repo": "activity-maker"
-            }
-        ],
+        "publish": [{
+            "provider": "github",
+            "owner": "uzair4100",
+            "repo": "activity-maker"
+        }],
         "win": {
             "publish": [
                 "github"
             ],
-            "target": [
-                {
-                    "target": "nsis",
-                    "arch": [
-                        "x64"
-                    ]
-                }
-            ]
+            "target": [{
+                "target": "nsis",
+                "arch": [
+                    "x64"
+                ]
+            }]
         }
     },
     "devDependencies": {
-        "cross-env": "^7.0.1",
-        "electron": "^12.0.2",
-        "electron-builder": "^20.20.4",
+        "electron": "^6.1.12",
+        "electron-builder": "^22.10.5",
         "electron-prebuilt": "^1.4.13",
         "nodemon": "^2.0.7"
     },
     "dependencies": {
         "cheerio": "^1.0.0-rc.3",
-        "electron-auto-update": "^1.2.2",
         "electron-build": "0.0.3",
         "electron-log": "^4.3.5",
         "electron-updater": "^4.3.9",
         "jquery": "^3.6.0",
-        "open": "^7.0.4",
         "prettify-xml": "^1.2.0",
         "recursive-copy": "^2.0.11"
     }

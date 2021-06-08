@@ -8,10 +8,13 @@ const cheerio = require("cheerio");
 var prettifyXml = require('prettify-xml');
 const copy = require('recursive-copy');
 
+//        "electron": "^12.0.2",
 
 
 //variables
-var filePath, optionValue, help="", helpContent="", activity, textSelected, quiz = "",
+var filePath, optionValue, help = "",
+    helpContent = "",
+    activity, textSelected, quiz = "",
     audioFiles = [];
 var source = path.join(require("os").homedir(), "id01/content.xml");
 //xml templates
@@ -45,91 +48,90 @@ const dialog = electron.dialog;
 var structure = document.querySelector("#structure");
 var modal = document.querySelector("#modal");
 structure.style.display = "none";
-modal.style.display="none";
+modal.style.display = "none";
 
 
 //catch updater event
 ipcRenderer.on('checking', function(event, text) {
     console.log(text)
- })
+})
 ipcRenderer.on('not-available', function(event, text) {
     console.log(text)
 })
-ipcRenderer.on('update', function(event,text) {
+ipcRenderer.on('update', function(event, text) {
     modal.style.display = "";
-    displayUpdateStatus(modal,text, 90000);
+    displayUpdateStatus(modal, text, 90000);
 })
-ipcRenderer.on('downloading', function(event,percent) {
-    displayUpdateStatus(modal,"Downloading Update", 90000);
-    let bar=`<div id="bar" class="progress-bar progress-bar-striped text-white text-bold" role="progressbar" style="width:${percent}" aria-valuemin="0" aria-valuemax="100">${percent}</div>`;
-    document.querySelector(".progress").innerHTML=bar;
+ipcRenderer.on('downloading', function(event, percent) {
+    displayUpdateStatus(modal, "Downloading Update", 90000);
+    let bar = `<div id="bar" class="progress-bar progress-bar-striped text-white text-bold" role="progressbar" style="width:${percent}" aria-valuemin="0" aria-valuemax="100">${percent}</div>`;
+    document.querySelector(".progress").innerHTML = bar;
 })
-ipcRenderer.on('downloaded', function(event,text) {
-    displayUpdateStatus(modal,text, 1000);
-   // modal.style.display="none";
+ipcRenderer.on('downloaded', function(event, text) {
+    displayUpdateStatus(modal, text, 1000);
+    // modal.style.display="none";
 })
 
 //load activity event handler
 document.querySelector("#load").addEventListener("click", function() {
-   // if (typeof(filePath) !== undefined && filePath != "") {
-        help = "";
-        filePath = document.querySelector("#filePath").value;
-        attrRemover()
-        quizContainer.innerHTML = "", audioFiles = [];
 
-        let fileExist = fs.existsSync(path.join(filePath, "content.xml"));
+    help = "";
+    filePath = document.querySelector("#filePath").value;
+    attrRemover()
+    quizContainer.innerHTML = "", audioFiles = [];
 
-        fileExist ? activity = activityFinder(filePath) : activity = activityType.options[activityType.selectedIndex].text.trim();
-        console.log(activity)
-        let contentFile = path.join(filePath, "content.xml");
-        // copyFiles(activity)
-        //find template
-        switch (activity) {
-            case "Select Item":
-                //   audioFiles = ["correct.mp3", "prompt.mp3", "select.mp3", "wrong.mp3"];
-                fetcher(fileExist, loadSI(contentFile), filePath, selectitemQuiz);
-                break;
+    let fileExist = fs.existsSync(path.join(filePath, "content.xml"));
 
-            case "Vertical Arrange":
-                document.getElementById("addQuiz").setAttribute("disabled", true);
-                document.getElementById("duplicate").setAttribute("disabled", true);
-                fetcher(fileExist, loadVA(contentFile), filePath, verticalarrangeQuiz);
-                break;
+    fileExist ? activity = activityFinder(filePath) : activity = activityType.options[activityType.selectedIndex].text.trim();
+    console.log(activity)
+    let contentFile = path.join(filePath, "content.xml");
+    // copyFiles(activity)
+    //find template
+    switch (activity) {
+        case "Select Item":
+            //   audioFiles = ["correct.mp3", "prompt.mp3", "select.mp3", "wrong.mp3"];
+            fetcher(fileExist, loadSI(contentFile), filePath, selectitemQuiz);
+            break;
 
-            case "Horizontal Arrange":
-                audioFiles = ["silence.mp3"];
-                document.getElementById("addQuiz").setAttribute("disabled", true);
-                document.getElementById("duplicate").setAttribute("disabled", true);
-                fetcher(fileExist, loadHA(contentFile), filePath, horizontalarrangeQuiz);
-                break;
+        case "Vertical Arrange":
+            document.getElementById("addQuiz").setAttribute("disabled", true);
+            document.getElementById("duplicate").setAttribute("disabled", true);
+            fetcher(fileExist, loadVA(contentFile), filePath, verticalarrangeQuiz);
+            break;
 
-            case "Sentence Builder":
-                audioFiles = ["drop.mp3", "prompt.mp3", "tap.mp3", "wrong.mp3"];
-                fetcher(fileExist, loadSB(contentFile), filePath, sentencebuilderQuiz);
-                break;
+        case "Horizontal Arrange":
+            audioFiles = ["silence.mp3"];
+            document.getElementById("addQuiz").setAttribute("disabled", true);
+            document.getElementById("duplicate").setAttribute("disabled", true);
+            fetcher(fileExist, loadHA(contentFile), filePath, horizontalarrangeQuiz);
+            break;
 
-            case "Multiple Choice":
-                document.getElementById("help").setAttribute("disabled", true);
-                fetcher(fileExist, loadMC(contentFile), filePath, multiplechoiceQuiz);
-                break;
+        case "Sentence Builder":
+            audioFiles = ["drop.mp3", "prompt.mp3", "tap.mp3", "wrong.mp3"];
+            fetcher(fileExist, loadSB(contentFile), filePath, sentencebuilderQuiz);
+            break;
 
-            case "Drag Category":
-                document.getElementById("duplicate").setAttribute("disabled", true);
-                audioFiles = ["drop.mp3"];
-                fetcher(fileExist, loadDC(contentFile), filePath, dragcategoryQuiz);
-                break;
+        case "Multiple Choice":
+            document.getElementById("help").setAttribute("disabled", true);
+            fetcher(fileExist, loadMC(contentFile), filePath, multiplechoiceQuiz);
+            break;
 
-            case "Text Input":
-                //document.getElementById("duplicate").setAttribute("disabled", true);
-                audioFiles = ["correct.mp3", "prompt.mp3"];
-                fetcher(fileExist, loadTI(contentFile), filePath, textinputQuiz);
-                break;
-            default:
-                quizContainer.innerHTML = "Invalid Activity Type!";
-        }
-  //  } else {
-    //    quizContainer.innerHTML = "Choose Path";
-    //}
+        case "Drag Category":
+            document.getElementById("duplicate").setAttribute("disabled", true);
+            audioFiles = ["drop.mp3"];
+            fetcher(fileExist, loadDC(contentFile), filePath, dragcategoryQuiz);
+            break;
+
+        case "Text Input":
+            //document.getElementById("duplicate").setAttribute("disabled", true);
+            audioFiles = ["correct.mp3", "prompt.mp3"];
+            fetcher(fileExist, loadTI(contentFile), filePath, textinputQuiz);
+            break;
+        default:
+            quizContainer.innerHTML = "Invalid Activity Type!";
+    }
+    var makeOptionWrapper = document.querySelectorAll('.makeOptionWrapper');
+    makeOptionWrapper.forEach(maker => maker.style.display = "none")
 });
 
 /////////////////////find source path/////////////////////////////////////////
@@ -137,7 +139,7 @@ document.getElementById("chooseFile").addEventListener("click", function() {
     ipcRenderer.send("chooseFile-dialog"); //send choose file event
 
     //receive choosefile event
-    ipcRenderer.on("chooseFile-selected", function(err,folder) {
+    ipcRenderer.on("chooseFile-selected", function(err, folder) {
         console.log(folder.filePaths[0])
         document.getElementById("filePath").value = folder.filePaths[0];
         filePath = document.getElementById("filePath").value;
@@ -158,11 +160,9 @@ document.addEventListener("click", function(e) {
     console.log(button);
 
     if (button.id == "wrap") {
-        let el = e.target.previousElementSibling;
+        let el = e.target.parentElement.previousElementSibling;
         let text = el.value;
         console.log(text)
-            //let start = window.getSelection().getRangeAt(0).startOffset;
-            //let end = window.getSelection().getRangeAt(0).endOffset;
         let start = el.selectionStart;
         let end = el.selectionEnd;
         console.log(start)
@@ -187,13 +187,28 @@ document.addEventListener("click", function(e) {
             }
         }
     }
+
+    if (button.id == "show_bulk") {
+        if (button.parentElement.nextElementSibling.firstElementChild.hasAttribute('style')) {
+            button.parentElement.nextElementSibling.firstElementChild.removeAttribute('style')
+        } else {
+            button.parentElement.nextElementSibling.firstElementChild.setAttribute('style', 'display:none')
+        }
+    }
+
     if (button.id == "bulk") {
         let bulkText = button.previousElementSibling.value;
         let name = button.closest(".quiz").querySelector(".no").innerHTML;
         let values = bulkText.split("\n");
-        console.log(values)
+        let opt = "";
         values.filter(val => typeof(val) !== undefined && val != "").map((val, v) => {
-            let opt = `<div class="input-group mt-1 option">
+            if (activity == "Sentence Builder") {
+                opt = `<div class="input-group mt-1 option">
+                        <input type="text" class="form-control option_value"  value="${val}"/>
+                        <button class="del">X</button>
+                    </div>`;
+            } else {
+                opt = `<div class="input-group mt-1 option">
                                     <div class="input-group-prepend">
                                         <div class="input-group-text">
                                             <input type="radio" name="${name}" class="option_radio" />
@@ -202,14 +217,14 @@ document.addEventListener("click", function(e) {
                                     <input type="text" class="form-control option_value" value="${val}"/>
                                     <button class="del">X</button>
                                 </div>`;
+            }
+
             button.closest(".quiz").querySelector(".quiz_options").insertAdjacentHTML("beforeend", opt);
 
         });
         button.previousElementSibling.value = "";
         button.previousElementSibling.focus();
     }
-
-
 
     if (button.classList.contains("del_quiz")) {
         let act = button.parentElement.parentElement;
@@ -220,7 +235,7 @@ document.addEventListener("click", function(e) {
         if (activity == "Sentence Builder") {
             if (button.closest(".quiz_options").childElementCount > 1) {
 
-                let sentence = button.parentElement.parentElement.parentElement.firstElementChild.children[0];
+                let sentence = button.parentElement.parentElement.parentElement.children[2].children[0].children[1]; //traverse from delete button(X) upto sentence
                 let text = sentence.innerHTML;
                 let ans = button.previousElementSibling.getAttribute("value");
                 console.log(ans)
@@ -299,7 +314,6 @@ document.addEventListener("click", function(e) {
     }
 
     if (button.id == "help") {
-        helpContent=""
         ipcRenderer.send("help-window", helpContent); //send event to main window to open modal window
 
         //receive form data
@@ -332,7 +346,8 @@ document.querySelector("#submit").addEventListener("click", function() {
             case "Sentence Builder":
                 xmlTemplate = fs.readFileSync(sentenceBuilder, "utf-8");
                 content = updateSB(xmlTemplate);
-                content = prettifyXml(content, { indent: 4 })
+                content = prettifyXml(content, { indent: 4 });
+                content = content.replace(/\>\s+\<!/g, '><!').replace(/\]>\s+\</g, ']><').replace(/\&lt;/g, '<').replace(/\&gt;/g, '>'); //regex to keep CDATA in same line
                 console.log(content)
                 break;
 
@@ -386,9 +401,9 @@ document.querySelector("#submit").addEventListener("click", function() {
         !fs.existsSync(filePath) ? fs.mkdirSync(filePath) : "";
         fs.writeFile(path.join(filePath, "content.xml"), content, function(err) {
             if (!err) {
-                displayMessage(status,`updated ${name}`, 3000);
+                displayMessage(status, `updated ${name}`, 3000);
                 copyFiles(activity)
-            help.length? fs.writeFileSync(path.join(filePath, "help.html"), help):"" ;
+                help.length ? fs.writeFileSync(path.join(filePath, "help.html"), help) : "";
 
             } else {
                 console.log(err)
@@ -454,7 +469,6 @@ function fetcher(exist, callFunction, filePath, template) {
             arrange(".quiz");
             console.log(resp)
             helpContent = helper(filePath); //get content from help file if exists
-
         }).catch(function(err) {
             quizContainer.innerHTML = `<div class="alert alert-danger" role="alert">${err}</div>`;
         })
@@ -545,14 +559,15 @@ function auto_grow(element) {
 }
 
 
-function displayMessage(status,msg, duration) {
+function displayMessage(status, msg, duration) {
     status.style.display = "";
     status.innerHTML = msg;
     setTimeout(function() {
         status.style.display = "none";
     }, duration);
 }
-function displayUpdateStatus(modal,msg, duration) {
+
+function displayUpdateStatus(modal, msg, duration) {
     document.querySelector(".card-text").innerHTML = msg;
     setTimeout(function() {
         modal.style.display = "none";
