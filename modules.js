@@ -121,11 +121,12 @@ function loadSI(contentXML) {
             let fileContent = fs.readFileSync(contentXML, "utf-8");
             let $ = cheerio.load(fileContent, { xmlMode: true, decodeEntities: false });
             let data = "";
-            //find randomise option
-            $("action[type=randomiseChoices]").length ? document.querySelector("#options_random").checked = true : "";
-            //find play audio on correct
-            $('passed').children("action[type=playSound]").attr('file') == "s001.mp3" ? document.querySelector("#onCorrect_audio").checked = true : "";
-            $("item[btn=Audio]").length ? document.querySelector("#clue_audio").checked = true : "";
+
+            $("action[type=randomiseChoices]").length ? document.querySelector("#options_random").checked = true : ""; //find randomise option
+
+            $('passed').children("action[type=playSound]").attr('file') == "s001.mp3" ? document.querySelector("#onCorrect_audio").checked = true : ""; //find play audio on correct
+            $("item[btn=Audio]").length ? document.querySelector("#clue_audio").checked = true : ""; //find audio clues
+            $("item[type=choiceFrames]").text().trim().length == 0 ? document.getElementById("options_image").checked = true : ""; //find image options
 
             $("frame:not(:eq(0))").each(function(i) {
                 let template = new DOMParser().parseFromString(selectitemQuiz, "text/html");
@@ -185,11 +186,11 @@ function updateSI(XML) {
     let actName = filePath.split("\\");
     let name = actName[6] + " " + actName[8] + "/" + actName[9];
     let quizzes = new DOMParser().parseFromString(quizContainer.innerHTML, "text/html")
-
     let quizzesArray = quizzes.querySelectorAll(".selectitem");
 
     let data = "",
-        content = "";
+        content = "",
+        isOptionImage = Boolean;
     //loop through quizzes
     for (let i = 0; i < quizzesArray.length; i++) {
         let quiz = quizzesArray[i];
@@ -205,6 +206,8 @@ function updateSI(XML) {
         document.getElementById("options_random").checked == true ? (randomise = `<action type="randomiseChoices" />`) : randomise = "";
         document.getElementById("onCorrect_audio").checked == true ? (playAudio = `<action type="delay" secs="0.5"/><action type="playSound" wait="yes" file="${sound}.mp3"></action>`) : playAudio = "";
         document.getElementById("clue_audio").checked == true ? (clueAudio = `<item type="button" btn="Audio"><action type="playSound" file="${sound}.mp3" wait="no"></action></item><action type="playSound" file="${sound}.mp3" wait="no"></action>`) : clueAudio = "";
+        document.getElementById("options_image").checked == true ? isOptionImage = true : isOptionImage = false;
+
         let opt = "",
             values = [];
 
@@ -212,25 +215,43 @@ function updateSI(XML) {
         let options = quiz.querySelectorAll(".option");
         console.log(options)
         let correct = "";
-        //add all option values in one array
-        for (let j = 0; j < options.length; j++) {
+        if (!isOptionImage) {
+            //add all option values in one array
+            for (let j = 0; j < options.length; j++) {
 
-            let opt_text = options[j].querySelector(".option_value").getAttribute("value").trim();
-            let opt_radio = options[j].querySelector(".option_radio");
-            opt_radio.hasAttribute("checked") ? correct = opt_text : "";
-            console.log(correct);
-            if (opt_text.length) {
-                (opt_text.includes("*")) ? values = values.concat(opt_text.split("*")): values.push(opt_text);
-                // (opt_text.includes("\n")) ? values = values.concat(opt_text.split("\n")): values.push(opt_text);
+                let opt_text = options[j].querySelector(".option_value").getAttribute("value").trim();
+                let opt_radio = options[j].querySelector(".option_radio");
+                opt_radio.hasAttribute("checked") ? correct = opt_text : "";
+                console.log(correct);
+                if (opt_text.length) {
+                    (opt_text.includes("*")) ? values = values.concat(opt_text.split("*")): values.push(opt_text);
+                    // (opt_text.includes("\n")) ? values = values.concat(opt_text.split("\n")): values.push(opt_text);
+                }
+            }
+
+            values.filter(val => typeof(val) !== undefined && val != "").map((val, v) => {
+                let correctFrame = "",
+                    frame = ``;
+                console.log(isOptionImage)
+                isOptionImage ? frame = ` frame="${v+1}"` : frame = "";
+                console.log(frame)
+                val.trim() == correct.trim() ? correctFrame = ` correctFrame ="1"` : "";
+                opt += `<item type="choiceFrames" sym="opt_${v}"${correctFrame} ${frame}>${val.trim()}</item>`
+            });
+        } else {
+
+            for (let j = 0; j < options.length; j++) {
+                let frame = ` frame="${j+1}"`,
+                    correctFrame = "";
+                let opt_radio = options[j].querySelector(".option_radio");
+                opt_radio.hasAttribute("checked") ? correctFrame = ` correctFrame ="1"` : correctFrame = ``;
+                opt += `<item type="choiceFrames" sym="opt_${j}"${frame}${correctFrame}></item>`
             }
         }
+        opt = opt.replace(/\>\s+\</g, '');
 
-        values.filter(val => typeof(val) !== undefined && val != "").map((val, v) => {
-            let correctFrame = "";
-            val.trim() == correct.trim() ? correctFrame = ` correctFrame ="1"` : "";
-            opt += `<item type="choiceFrames" sym="opt_${v}"${correctFrame}>${val.trim()}</item>`
-        });
-
+        console.log(opt)
+            ///////////
         let frameContent = `<frame num="${i + 2}">
                         <item type="button" btn="btnCheck" >
                             <action type="validateChoices">
@@ -255,7 +276,7 @@ function updateSI(XML) {
 
         data += frameContent;
     } //end loop
-    data = prettifyXml(data, { indent: 4 })
+    //  data = prettifyXml(data, { indent: 4 })
     template.querySelector("activity").innerHTML = name;
     template.querySelector("end").insertAdjacentHTML("beforebegin", data);
     content = new XMLSerializer().serializeToString(template);;

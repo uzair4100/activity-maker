@@ -54,15 +54,10 @@
                 editor = new Quill(content, {
                     modules: {
                         toolbar: [
-                            [{
-                                header: [3, false],
-                            }],
+                            [{header: [3, false],}],
                             ['bold'],
-                            [{
-                                'list': 'ordered'
-                            }, {
-                                'list': 'bullet'
-                            }]
+                            [{'list': 'ordered'}, 
+                            {'list': 'bullet'}]
                         ]
                     },
                     placeholder: "Instructions in language \n Instructions in English",
@@ -77,10 +72,31 @@
         add.addEventListener("click", function(e) {
 
             let data = editor.root.innerHTML;
-            data = new DOMParser().parseFromString(data, "text/html");
-            data.body.innerText.length ? data = data.body.innerHTML : data = "";
+            data=data.replace(/<p><br[\/]?><[\/]?p>/g, '').replace(/<h3><br[\/]?><[\/]?h3>/g, '');
+            data=new DOMParser().parseFromString(data,"text/html");
+            let childs=data.body.childNodes;
+            for(let i=0;i<childs.length;i++){
+                let text= childs[i].innerText.trim()
+               if(!   text.length){
+                  childs[i].remove()
+               }
+            }
+            let heading3=data.querySelectorAll('h3');
+            if(heading3.length>1){
+             heading3[0].insertAdjacentHTML("beforebegin","<!-- lote -->");
+             heading3[1].insertAdjacentHTML("beforebegin","<!-- English -->");
+            }
+           /* let childs=data.body.childNodes;
+            for(let i=0;i<childs.length;i++){
+                //let text = childs[i].innerText.trim();
+               // alert(text)
+               if(childs[i].innerText="" || childs[i].innerText=="<br>"){
+                  childs[i].remove()
+               }
+            }*/
+            //alert(data.body.innerHTML)
             console.log(data);
-            ipcRenderer.send("help-data", data);
+            ipcRenderer.send("help-data", data.body.innerHTML);
         });
 
         close.addEventListener("click", function(e) {

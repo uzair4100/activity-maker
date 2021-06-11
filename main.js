@@ -5,58 +5,17 @@ const path = require('path');
 const dialog = electron.dialog;
 const ipc = electron.ipcMain;
 const { app, BrowserWindow } = electron
-const log = require('electron-log');
-const { autoUpdater } = require('electron-updater');
 var mainWindow, helpWindow, position = [];
-
-
-
-autoUpdater.logger = log;
-autoUpdater.logger.transports.file.level = 'info';
-log.info('App starting...');
-
-//auto updates
-autoUpdater.on('checking-for-update', () => {
-    //sendStatusToWindow('Checking for update...');
-    mainWindow.webContents.send('checking', 'Checking for update...');
-})
-autoUpdater.on('update-available', (info) => {
-    //sendStatusToWindow('Update available.');
-    mainWindow.webContents.send('update', 'Update available...');
-})
-autoUpdater.on('update-not-available', (info) => {
-    // sendStatusToWindow('Update not available.');
-    mainWindow.webContents.send('not-available', 'Update not available.');
-});
-autoUpdater.on('error', (err) => {
-    //sendStatusToWindow('Error in auto-updater. ' + err);
-})
-autoUpdater.on('download-progress', (progressObj) => {
-    let log_message = Math.round(progressObj.percent) + '%';
-    //sendStatusToWindow(log_message);
-    mainWindow.webContents.send('downloading', log_message);
-})
-autoUpdater.on('update-downloaded', (info) => {
-    mainWindow.webContents.send('downloaded', "Successfully Downloaded!");
-    // sendStatusToWindow('Update downloaded');
-    setTimeout(() => {
-        let index = dialog.showMessageBoxSync({
-            type: 'info',
-            message: 'A new version of app is available. Do you want to update now?',
-            buttons: ['Update Now', 'Update after I close App']
-        })
-        index == 1 ? "" : autoUpdater.quitAndInstall();
-    }, 1500);
-});
+const isDev = require('electron-is-dev');
 
 
 app.on('ready', function() {
-
     //creat new window
     mainWindow = new BrowserWindow({
-
+        width: 900,
         minWidth: 900,
         minHeight: 1020,
+        height: 1020,
         width: 900,
         webPreferences: {
             nodeIntegration: true,
@@ -70,12 +29,10 @@ app.on('ready', function() {
         protocol: 'file',
         slashes: true
     }));
-    //mainWindow.webContents.openDevTools();
+    mainWindow.webContents.openDevTools();
     mainWindow.autoHideMenuBar = true;
 
     console.log('App loaded...');
-
-    autoUpdater.checkForUpdatesAndNotify();
 
     //receive load file event
     ipc.on('chooseFile-dialog', function(event) {
@@ -154,7 +111,25 @@ app.on('ready', function() {
     });
 
 
-    mainWindow.once("ready-to-show", () => {
-        autoUpdater.checkForUpdatesAndNotify();
+    mainWindow.webContents.once("dom-ready", () => {
+        let appVersion = ``;
+        console.log(appVersion)
+        if (!isDev) {
+            appVersion = `v${app.getVersion()}`;
+        }
+
+        mainWindow.webContents.send('version', appVersion);
+
+    });
+
+    ipc.on('downloaded', (info) => {
+        mainWindow.webContents.send('download-success', "Successfully Downloaded!");
+        let index = dialog.showMessageBoxSync({
+            title: 'Update Available',
+            type: 'info',
+            message: 'A new version of app is available. Do you want to update now?',
+            buttons: ['Yes', 'No']
+        })
+        mainWindow.webContents.send('user-response', index);
     });
 });
