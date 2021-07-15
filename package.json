@@ -1,0 +1,57 @@
+{
+    "name": "activity-maker",
+    "version": "1.0.0",
+    "repository": "https://github.com/uzair4100/activity-maker",
+    "description": "Make interactives",
+    "author": "Uzair",
+    "license": "MIT",
+    "main": "main.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "electron .",
+        "pack": "electron-builder -mwl",
+        "dist": "electron-builder",
+        "publish": "electron-builder --win --x64 -p always",
+        "dev": "nodemon --watch * --exec \"electron . --debug\" -e js,json,html,css",
+        "fix": "electron-fix start"
+    },
+    "build": {
+        "appId": "com.activity.quickstart",
+        "productName": "activity maker",
+        "publish": [
+            {
+                "provider": "github",
+                "owner": "uzair4100",
+                "repo": "activity-maker"
+            }
+        ],
+        "win": {
+            "publish": [
+                "github"
+            ],
+            "target": [
+                {
+                    "target": "nsis",
+                    "arch": [
+                        "x64"
+                    ]
+                }
+            ]
+        }
+    },
+    "devDependencies": {
+        "electron": "^6.1.12",
+        "electron-builder": "^22.10.5",
+        "electron-prebuilt": "^1.4.13",
+        "nodemon": "^2.0.7"
+    },
+    "dependencies": {
+        "axios": "^0.21.1",
+        "cheerio": "^1.0.0-rc.3",
+        "electron-build": "0.0.3",
+        "electron-is-dev": "^2.0.0",
+        "jquery": "^3.6.0",
+        "prettify-xml": "^1.2.0",
+        "recursive-copy": "^2.0.11"
+    }
+}

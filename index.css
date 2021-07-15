@@ -1,0 +1,112 @@
+body {
+    background: yellow;
+}
+
+#quiz_container {
+    max-height: 600px;
+    height: 600px;
+    overflow: auto;
+    display: none;
+    padding: 10px;
+    border: 3px solid #ccc;
+}
+
+.addOption {
+    cursor: pointer;
+    position: relative;
+    right: 41px;
+    bottom: 32px;
+}
+
+.del_quiz {
+    cursor: pointer;
+}
+
+#templates {
+    display: none;
+}
+
+#activityType option {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.fadeIn {
+    opacity: 1;
+    -moz-animation: fadeIn 0.5s linear;
+    -webkit-animation: fadeIn 0.5s linear;
+    animation: fadeIn 0.5s linear;
+}
+
+textarea {
+    resize: none;
+    overflow: auto;
+    min-height: 50px;
+    max-height: 1000px;
+}
+
+#modal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-right: -50%;
+    transform: translate(-50%, -50%);
+}
+
+#modal2 {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-right: -50%;
+    transform: translate(-50%, -50%);
+}
+
+.h6 {
+    cursor: url("https://img.icons8.com/android/15/000000/edit.png"), url(foo.cur), auto !important;
+}
+
+.clue {
+    font-size: 16px !important;
+}
+
+.ql-tooltip,
+.ql-hidden {
+    z-index: 100;
+    width: auto !important;
+}
+
+.ql-formats .ql-active {
+    font-weight: bolder !important;
+    /* border: 1px solid #fff !important; */
+    padding: 1px !important;
+    margin: 0 1px !important;
+}
+
+.ql-link {
+    display: none !important;
+    /*dont need link option*/
+}
+
+#help-container {
+    background: yellow;
+}
+
+#close {
+    cursor: pointer;
+    font-size: 30px;
+    background: #fff;
+    padding: 2px 5px;
+}
+
+#content {
+    width: 100% !important;
+}
