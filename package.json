@@ -50,6 +50,7 @@
         "cheerio": "^1.0.0-rc.3",
         "electron-build": "0.0.3",
         "electron-is-dev": "^2.0.0",
+        "gurmukhi-utils": "^3.2.1",
         "jquery": "^3.6.0",
         "prettify-xml": "^1.2.0",
         "recursive-copy": "^2.0.11"

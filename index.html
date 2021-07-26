@@ -48,13 +48,13 @@
                 <option value="6">Drag Category</option>
                 <!--<option value="7">Text Input</option>-->
                 <option value="8">Sound Recorder</option>
-              </select>
+               </select>
             </div>
 
             <!--==================structure======================================-->
             <div id="structure_wrapper" class="d-flex justify-content-center align-items-start">
                 <div class="h4 mr-3">Structure:</div>
-                <div id="structure" class="d-flex justify-content-between flex-column align-items-start border border-dark rounded px-5 py-2 mb-2 w-100">
+                <div id="structure" class="d-flex justify-content-between flex-column align-items-start border border-dark rounded px-5 py-0 mb-2 w-100">
                     <div id="clue" class="d-flex justify-content-between">
                         <div class="h5 mr-3">Clue</div>
                         <div class="form-check form-check-inline">
@@ -102,6 +102,20 @@
                         </div>
                     </div>
                     <!--end onCorrect-->
+
+                    <div id="font" class="d-flex justify-content-between">
+                        <div class="h5 mr-3">Font</div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="font" id="font_ascii" />
+                            <label class="form-check-label" for="font_ascii">Ascii</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="font" id="font_unicode" />
+                            <label class="form-check-label" for="font_unicode">Unicode</label>
+                        </div>
+                    </div>
+                    <!--end font-->
+
                 </div>
                 <!--end structure-->
             </div>

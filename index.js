@@ -10,9 +10,15 @@ var prettifyXml = require("prettify-xml");
 const copy = require("recursive-copy");
 const os = require("os");
 const axios = require('axios').default;
+const { toAscii, toUnicode, toEnglish, isGurmukhi } = require('gurmukhi-utils');
 
+const unicodeGurmukhi = 'ਮਿਹਣਤ*ਮੇਹਣਤ';
+const ss = 'imhnq';
+let uni = toUnicode(ss)
+console.log(uni);
+console.log(toAscii(uni));
 
-// set Quill to use <b> and <i>, not <strong> and <em>
+// set Quill to use <b> and <i>, not <strong> and <em> 
 var bold = Quill.import('formats/bold');
 bold.tagName = 'b'; // Quill uses <strong> by default
 Quill.register(bold, true);
@@ -168,12 +174,7 @@ document.addEventListener("click", function(e) {
         if (el.classList.contains("sentence")) {
             let word = text.substring(start, end).toString();
             if (word.trim().length) {
-                text =
-                    text.substring(0, start) +
-                    "[" +
-                    word +
-                    "]" +
-                    text.substring(end, text.length); //make new sentence
+                text = text.substring(0, start) + "[" + word + "]" + text.substring(end, text.length); //make new sentence
                 console.log(text);
                 el.innerHTML = text;
                 el.value = el.innerHTML;
@@ -372,6 +373,50 @@ document.addEventListener("click", function(e) {
             console.log(help);
         });
     }
+
+    if (button.name == "font") {
+        let fontName = button.nextElementSibling.innerHTML; //get user selected font
+        let options = quizContainer.querySelectorAll('.option_value');
+        let clue = quizContainer.querySelectorAll('.clue');
+        let sentence = quizContainer.querySelectorAll('.sentence');
+        let allField = [];
+        allField.push(options, clue, sentence);
+
+        console.log(allField)
+        switch (fontName) {
+            case "Ascii":
+                for (let i = 0; i < allField.length; i++) {
+                    let element = allField[i];
+                    for (let j = 0; j < element.length; j++) {
+                        if (element[j].nodeName == 'INPUT') {
+                            element[j].value = toAscii(element[j].value)
+                                //console.log(element[j].value)
+                        } else {
+                            element[j].querySelector(".ql-editor").innerText = toAscii(element[j].querySelector(".ql-editor").innerText)
+                                //console.log(element[j].querySelector(".ql-editor").innerHTML)
+
+                        }
+                    }
+                }
+                break;
+            case "Unicode":
+                for (let i = 0; i < allField.length; i++) {
+                    let element = allField[i];
+                    for (let j = 0; j < element.length; j++) {
+                        if (element[j].nodeName == 'INPUT') {
+                            isGurmukhi(element[j].value) ? toUnicode(element[j].value) : "";
+                            // console.log(element[j].value)
+                        } else {
+                            element[j].querySelector(".ql-editor").innerText = toUnicode(element[j].querySelector(".ql-editor").innerText)
+                                // console.log(element[j].querySelector(".ql-editor").innerHTML)
+
+                        }
+                    }
+                }
+                break;
+        }
+    }
+
 });
 
 /////////////////////////////////submit//////////////////////////////////////////////////////////
@@ -619,6 +664,11 @@ function fetcher(exist, callFunction, filePath, template) {
                 console.log(resp);
                 helpContent = helper(filePath); //get content from help file if exists
                 initQuill(true)
+                let inputs = quizContainer.querySelectorAll('.option_value');
+                for (let index = 0; index < inputs.length; index++) {
+                    const element = inputs[index];
+                    console.log(element.value)
+                }
             })
             .catch(function(err) {
                 quizContainer.innerHTML = `<div class="alert alert-danger" role="alert">${err}</div>`;
@@ -629,6 +679,7 @@ function fetcher(exist, callFunction, filePath, template) {
         initQuill(true)
     }
 }
+
 
 function initQuill(status) {
     //status is true on intail load, false when add/duplicate quiz
@@ -691,13 +742,10 @@ function arrange(classname) {
 
 function copyFiles(act) {
     let folder = path.join(templateFolder, act);
-    let hasFla = fs
-        .readdirSync(filePath)
-        .filter((file) => path.extname(file) == ".fla");
+    let hasFla = fs.readdirSync(filePath).filter((file) => path.extname(file) == ".fla");
     console.log(hasFla);
-    let files = fs
-        .readdirSync(folder)
-        .filter((file) => path.extname(file) != ".xml");
+    let files = fs.readdirSync(folder).filter((file) => path.extname(file) != ".xml");
+
     files.forEach(function(file) {
         let src = path.join(folder, file);
         let dest = path.join(filePath, file);
