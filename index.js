@@ -375,7 +375,7 @@ document.addEventListener("click", function(e) {
     }
 
     if (button.name == "font") {
-        let fontName = button.nextElementSibling.innerHTML; //get user selected font
+        let fontName = button.value; //get user selected font
         let options = quizContainer.querySelectorAll('.option_value');
         let clue = quizContainer.querySelectorAll('.clue');
         let sentence = quizContainer.querySelectorAll('.sentence');
@@ -383,37 +383,26 @@ document.addEventListener("click", function(e) {
         allField.push(options, clue, sentence);
 
         console.log(allField)
-        switch (fontName) {
-            case "Ascii":
-                for (let i = 0; i < allField.length; i++) {
-                    let element = allField[i];
-                    for (let j = 0; j < element.length; j++) {
-                        if (element[j].nodeName == 'INPUT') {
-                            element[j].value = toAscii(element[j].value)
-                                //console.log(element[j].value)
-                        } else {
-                            element[j].querySelector(".ql-editor").innerText = toAscii(element[j].querySelector(".ql-editor").innerText)
-                                //console.log(element[j].querySelector(".ql-editor").innerHTML)
 
-                        }
-                    }
-                }
-                break;
-            case "Unicode":
-                for (let i = 0; i < allField.length; i++) {
-                    let element = allField[i];
-                    for (let j = 0; j < element.length; j++) {
-                        if (element[j].nodeName == 'INPUT') {
-                            isGurmukhi(element[j].value) ? toUnicode(element[j].value) : "";
-                            // console.log(element[j].value)
-                        } else {
-                            element[j].querySelector(".ql-editor").innerText = toUnicode(element[j].querySelector(".ql-editor").innerText)
-                                // console.log(element[j].querySelector(".ql-editor").innerHTML)
+        for (let i = 0; i < allField.length; i++) {
+            let element = allField[i];
+            for (let j = 0; j < element.length; j++) {
 
+                switch (fontName) {
+                    //first check if its input field or div, in case:Ascii charConvertor function is used beacuase it converts character by character
+                    case "Ascii":
+                        (element[j].nodeName == 'INPUT' || element[j].nodeName == 'TEXTAREA') ? element[j].value = charConverter(element[j].value): element[j].querySelector(".ql-editor").innerText = charConverter(element[j].querySelector(".ql-editor").innerText);
+
+                        break;
+                    case "Unicode":
+                        if (element[j].nodeName == 'INPUT' || element[j].nodeName == 'TEXTAREA') {
+                            element[j].value ? element[j].value = toUnicode(element[j].value) : "";
+                        } else {
+                            element[j].querySelector(".ql-editor").innerText ? element[j].querySelector(".ql-editor").innerText = toUnicode(element[j].querySelector(".ql-editor").innerText) : "";
                         }
-                    }
+                        break;
                 }
-                break;
+            }
         }
     }
 
@@ -690,7 +679,10 @@ function initQuill(status) {
                 modules: {
                     toolbar: [
                         ['bold', 'italic', 'underline'],
-                        ['link']
+                        ['link'],
+                        [{
+                            'color': ['#800000', '#6d26e0']
+                        }]
                     ]
                 },
                 theme: 'bubble'
@@ -803,11 +795,23 @@ function displayUpdateStatus(modal, msg, duration) {
         modal.style.display = "none";
     }, duration);
 }
+
 //clear app
 document.querySelector("#clear").addEventListener("click", function() {
     location.reload();
 });
 
+
+function charConverter(line) {
+    let special = ["[", "]"]
+    line = line.split("")
+
+    let converted = [];
+    line.map(ln => {
+        isGurmukhi(ln) || !special.includes(ln) ? converted.push(toAscii(ln)) : converted.push(ln);
+    })
+    return converted.join("")
+}
 
 function getLanguage(source) {
 

@@ -96,6 +96,12 @@ textarea {
     /*dont need link option*/
 }
 
+.ql-picker-options {
+    background: floralwhite !important;
+    border: 1px solid lightseagreen !important;
+    width: auto !important;
+}
+
 #help-container {
     background: yellow;
 }

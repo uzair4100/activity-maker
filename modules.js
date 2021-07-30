@@ -151,7 +151,7 @@ function loadSI(contentXML) {
                 let template = new DOMParser().parseFromString(selectitemQuiz, "text/html");
 
                 let no = i + 1;
-                let clueText = $(this).find("action[type=setText]").text();
+                let clueText = $(this).find("action[tbox=clueTxt]").text();
                 let optns = $(this).find("item[type=choiceFrames]");
                 let opt = "";
                 !clueText ? clueText = "" : "";
@@ -255,14 +255,15 @@ function updateSI(XML) {
             values.filter(val => typeof(val) !== undefined && val != "").map((val, v) => {
                 let correctFrame = "",
                     frame = ``;
-                console.log(isOptionImage)
+                //console.log(isOptionImage)
                 isOptionImage ? frame = ` frame="${v+1}"` : frame = "";
-                console.log(frame)
-                val.trim() == correct.trim() ? correctFrame = ` correctFrame ="1"` : "";
-                opt += `<item type="choiceFrames" sym="opt_${v}"${correctFrame} ${frame}>${val.trim()}</item>`
-            });
+                // console.log(frame)
+                val.trim() == correct.trim() ? correctFrame = ` correctFrame="1"` : "";
+                val.includes('&') ? val = `<![CDATA[${val.trim()}]]>` : ""; //for mostly punjabi font '&' makes xml file invalid
+                opt += `<item type="choiceFrames" sym="opt_${v}"${correctFrame}${frame}>${val.trim()}</item>`
+            }); //<![CDATA[fdfdf]]
         } else {
-
+            //for image options xml structure is different
             for (let j = 0; j < options.length; j++) {
                 let frame = ` frame="${j+1}"`,
                     correctFrame = "";
@@ -299,9 +300,11 @@ function updateSI(XML) {
 
         data += frameContent;
     } //end loop
-    //  data = prettifyXml(data, { indent: 4 })
+    data = prettifyXml(data, { indent: 4 })
+    console.log(data)
     template.querySelector("activity").innerHTML = name;
     template.querySelector("end").insertAdjacentHTML("beforebegin", data);
+    console.log(template)
     content = new XMLSerializer().serializeToString(template);;
     return content;
 } //end updateSI function
