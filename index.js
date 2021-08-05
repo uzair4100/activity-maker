@@ -12,12 +12,17 @@ const os = require("os");
 const axios = require('axios').default;
 const { toAscii, toUnicode, toEnglish, isGurmukhi } = require('gurmukhi-utils');
 
-const unicodeGurmukhi = 'ਮਿਹਣਤ*ਮੇਹਣਤ';
-const ss = 'imhnq';
+const unicodeGurmukhi = '  ਦਮਨ ਨੇ ਇਸ਼ਨਾਨ ਕੀਤਾ।';
+console.log(toAscii(unicodeGurmukhi))
+var ss = '  dmn [ny] ieSnwn kIqw[';
 let uni = toUnicode(ss)
 console.log(uni);
-console.log(toAscii(uni));
-
+ss = toAscii(uni)
+console.log(ss);
+uni = toUnicode(ss)
+console.log(uni);
+ss = toAscii(uni)
+console.log(ss);
 // set Quill to use <b> and <i>, not <strong> and <em> 
 var bold = Quill.import('formats/bold');
 bold.tagName = 'b'; // Quill uses <strong> by default
@@ -63,7 +68,7 @@ var quizContainer = document.getElementById("quiz_container");
 const status = document.getElementById("status");
 const activityType = document.getElementById("activityType");
 const templateFolder = "\\\\vsl-file01\\coursesdev$\\template";
-const fullstops = [".", "。", "|", "?", "!"];
+const fullstops = [".", "。", "|", "?", "!", ",", "，"];
 const wrap = document.getElementById("wrap");
 const languages = document.getElementById("languages");
 status.style.display = "none";
@@ -387,20 +392,13 @@ document.addEventListener("click", function(e) {
         for (let i = 0; i < allField.length; i++) {
             let element = allField[i];
             for (let j = 0; j < element.length; j++) {
+                let clueText = '';
 
-                switch (fontName) {
-                    //first check if its input field or div, in case:Ascii charConvertor function is used beacuase it converts character by character
-                    case "Ascii":
-                        (element[j].nodeName == 'INPUT' || element[j].nodeName == 'TEXTAREA') ? element[j].value = charConverter(element[j].value): element[j].querySelector(".ql-editor").innerText = charConverter(element[j].querySelector(".ql-editor").innerText);
+                if (element[j].nodeName == 'INPUT' || element[j].nodeName == 'TEXTAREA') {
+                    element[j].value = filtered(element[j].value, fontName)
 
-                        break;
-                    case "Unicode":
-                        if (element[j].nodeName == 'INPUT' || element[j].nodeName == 'TEXTAREA') {
-                            element[j].value ? element[j].value = toUnicode(element[j].value) : "";
-                        } else {
-                            element[j].querySelector(".ql-editor").innerText ? element[j].querySelector(".ql-editor").innerText = toUnicode(element[j].querySelector(".ql-editor").innerText) : "";
-                        }
-                        break;
+                } else {
+                    element[j].querySelector(".ql-editor").innerText = filtered(element[j].querySelector(".ql-editor").innerHTML, fontName)
                 }
             }
         }
@@ -408,6 +406,69 @@ document.addEventListener("click", function(e) {
 
 });
 
+function filtered(text, font) {
+    let special = ["[", "]"];
+
+    let response = '',
+        _text, converted = [];
+    _text = text = text.replace(/<p>\s+<[\/]?p>/g, '').replace(/<p><br[\/]?><[\/]?p>/g, '').replace(/(&nbsp;|<br>|<br \/>)/gm, '').replace('<p>', '').replace('</p>', '').replace(/\&lt;/g, "<").replace(/\&gt;/g, ">");
+    console.log(font)
+
+    _text = _text.split("")
+
+    switch (font) {
+        case "Ascii":
+            // isGurmukhi(_text) ? response = toAscii(_text) : response = _text;
+            _text.map(ln => {
+                ln = ln.replace('।', '[').replace('॥', ']')
+
+                if (isGurmukhi(ln)) {
+                    converted.push(toAscii(ln))
+                        //!special.includes(ln) ? converted.push(toAscii(ln)) : converted.push(ln);
+                } else {
+                    converted.push(ln);
+                }
+            });
+            break;
+        case "Unicode":
+            // !isGurmukhi(_text) ? response = toUnicode(_text) : response = _text;
+            _text.map(ln => {
+                ln = ln.replace('[', '।').replace(']', '॥')
+
+                if (!isGurmukhi(ln)) {
+                    converted.push(toUnicode(ln))
+                        //!special.includes(ln) ? converted.push(toUnicode(ln)) : converted.push(ln);
+
+                } else {
+
+                    converted.push(ln);
+                }
+            });
+            break;
+    }
+
+    return converted.join("")
+}
+
+function charConverter(line) {
+    line = line.replace(/<p>\s+<[\/]?p>/g, '').replace(/<p><br[\/]?><[\/]?p>/g, '').replace(/(&nbsp;|<br>|<br \/>)/gm, '').replace('<p>', '')
+        .replace('</p>', '').replace(/\&lt;/g, "<")
+        .replace(/\&gt;/g, ">");
+    let special = ["[", "]"]
+    line = line.split("")
+
+    let converted = [];
+    line.map(ln => {
+        //isGurmukhi(ln) || !special.includes(ln) ? converted.push(toAscii(ln)) : converted.push(ln);
+        if (isGurmukhi(ln)) {
+            converted.push(toAscii(ln))
+        } else {
+            converted.push(ln);
+            //  special.includes(ln) ?
+        }
+    })
+    return converted.join("")
+}
 /////////////////////////////////submit//////////////////////////////////////////////////////////
 
 document.querySelector("#submit").addEventListener("click", function() {
@@ -653,14 +714,10 @@ function fetcher(exist, callFunction, filePath, template) {
                 console.log(resp);
                 helpContent = helper(filePath); //get content from help file if exists
                 initQuill(true)
-                let inputs = quizContainer.querySelectorAll('.option_value');
-                for (let index = 0; index < inputs.length; index++) {
-                    const element = inputs[index];
-                    console.log(element.value)
-                }
+                    // document.getElementById('font_ascii').click()
             })
             .catch(function(err) {
-                quizContainer.innerHTML = `<div class="alert alert-danger" role="alert">${err}</div>`;
+                quizContainer.innerHTML = `<div class="alert alert-danger" role="alert">Could not load  activity &#128547;</div>`;
             });
     } else {
         quizContainer.innerHTML = template;
@@ -694,7 +751,10 @@ function initQuill(status) {
             modules: {
                 toolbar: [
                     ['bold', 'italic', 'underline'],
-                    ['link']
+                    ['link'],
+                    [{
+                        'color': ['#800000', '#6d26e0']
+                    }]
                 ]
             },
             theme: 'bubble'
@@ -736,7 +796,7 @@ function copyFiles(act) {
     let folder = path.join(templateFolder, act);
     let hasFla = fs.readdirSync(filePath).filter((file) => path.extname(file) == ".fla");
     console.log(hasFla);
-    let files = fs.readdirSync(folder).filter((file) => path.extname(file) != ".xml");
+    let files = fs.readdirSync(folder).filter((file) => path.extname(file) != ".xml"); //we don't have to copy xml file
 
     files.forEach(function(file) {
         let src = path.join(folder, file);
@@ -802,16 +862,7 @@ document.querySelector("#clear").addEventListener("click", function() {
 });
 
 
-function charConverter(line) {
-    let special = ["[", "]"]
-    line = line.split("")
 
-    let converted = [];
-    line.map(ln => {
-        isGurmukhi(ln) || !special.includes(ln) ? converted.push(toAscii(ln)) : converted.push(ln);
-    })
-    return converted.join("")
-}
 
 function getLanguage(source) {
 

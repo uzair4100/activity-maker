@@ -35,15 +35,18 @@ function loadSB(contentXML) {
             template.querySelector(".no").innerHTML = no;
 
             data += template.body.innerHTML;
+
+
         }); //end outer loop
 
-        if (data) {
+        if (sentence || optn) {
             //console.log(data);
             quizContainer.innerHTML = data;
             resolve("loaded");
         } else {
             reject("Could not load activity!")
         }
+
     })
 } //end loadSB
 
@@ -79,7 +82,7 @@ function updateSB(XML) {
         let sentence = quiz.querySelector("#sentence").innerHTML;
         sentence.includes("\n") ? sentence = sentence.split("\n").join(" &#xD;") : ""; //add line breaks in multi line sentence
 
-        let clueText = quiz.querySelector(".ql-editor").innerHTML;
+        let clueText = quiz.querySelector(".ql-editor").innerHTML; //fetch text from quill because editor attached with clues field
         clueText = clueText.replace('<p>', '').replace('</p>', '').replace(/<p><br[\/]?><[\/]?p>/g, '').replace(/(&nbsp;|<br>|<br \/>)/gm, '').replace(/\>\s+\</g, '><'); //remove need <p> tags
         parseInt(i + 1) < 10 ? sound = `s00${i+1}` : sound = `s0${i+1}`;
         document.getElementById("onCorrect_audio").checked == true ? (playAudio = `<action type="delay" secs="0.5"/><action type="playSound" wait="yes" file="${sound}.mp3"></action>`) : playAudio = "";
@@ -175,15 +178,17 @@ function loadSI(contentXML) {
                 template.querySelector("#clueText").innerHTML = clueText;
 
                 data += template.body.innerHTML;
+
+                if (clueText || optn) {
+                    //console.log(data);
+                    quizContainer.innerHTML = data;
+                    resolve("loaded");
+                } else {
+                    reject("Could not load activity!")
+                }
             }); //end outer loop
 
-            if (data) {
-                //console.log(data);
-                quizContainer.innerHTML = data;
-                resolve("loaded");
-            } else {
-                reject("Could not load activity!")
-            }
+
         }) //return 
 }
 
@@ -336,11 +341,11 @@ function loadVA(contentXML) {
         }); //end outer loop
 
         template.querySelector(".quiz_options").innerHTML = quiz;
-        template.querySelector(".quiz_options").insertAdjacentHTML("beforebegin", `<div class="d-flex justify-content-around"><h6>Left Column</h6><h6>Right Column</h6></div>`)
+        //template.querySelector(".quiz_options").insertAdjacentHTML("beforebegin", `<div class="d-flex justify-content-around"><h6>Left Column</h6><h6>Right Column</h6></div>`)
         data = template.body.innerHTML;
         console.log(data);
 
-        if (data) {
+        if ($('left').text() || $('right').text()) {
             //console.log(data);
             quizContainer.innerHTML = data;
             resolve("loaded");
@@ -394,16 +399,16 @@ function updateVA(XML) {
         console.log(_right)
 
     } //end loop
-    // values.filter(val => typeof(val) !== undefined && val != "").map((val, v) => opt += `<option sym="opt_${v}">${val.trim()}</option>`);
+
     for (j = 0; j < _right.length; j++) {
         let leftValue = _left[j];
         if (options_audio.checked) {
+            template.querySelector('questions').setAttribute('randomise_left_column', 'no')
             leftValue = ""
             parseInt(j + 1) < 10 ? sound = ` audio="s00${j+1}.mp3"` : sound = ` audio="s0${j+1}.mp3"`;
         }
         data += `<quiz><left${sound}>${leftValue}</left><right>${_right[j].trim()}</right></quiz>`;
     }
-    // data += opt;
 
     data = prettifyXml(data, { indent: 2 })
     template.querySelector("activity").innerHTML = name;
@@ -426,7 +431,6 @@ function loadHA(contentXML) {
         let quizTemplate = new DOMParser().parseFromString(template.querySelector(".option").outerHTML, "text/html");
         let onCorrect_audio = document.getElementById("onCorrect_audio");
 
-        //   !$("questions").attr("textwidthfiddle") ? reject("Invalid Activity Type") : ""; //check for horizontal arrange template 
         $("quiz").attr("audio") != "silence.mp3" ? document.querySelector("#onCorrect_audio").checked = true : "" //check audio button if no silence file
 
         console.log(template);
@@ -444,14 +448,13 @@ function loadHA(contentXML) {
         data = template.body.innerHTML;
         console.log(data);
 
-        if (data) {
+        if ($('quiz').text()) {
             //console.log(data);
             quizContainer.innerHTML = data;
             resolve("loaded");
         } else {
             reject("Could not load activity!")
         }
-        // resolve()
     });
 } //end loadHA
 
@@ -552,15 +555,18 @@ function loadMC(contentXML) {
                 template.querySelector("#clueText").innerHTML = clueText;
 
                 data += template.body.innerHTML;
+
+                if (clueText || optns.text()) {
+                    //console.log(data);
+                    quizContainer.innerHTML = data;
+                    resolve("loaded");
+                } else {
+                    reject("Could not load activity!")
+                }
+
             }); //end outer loop
 
-            if (data) {
-                //console.log(data);
-                quizContainer.innerHTML = data;
-                resolve("loaded");
-            } else {
-                reject("Could not load activity!")
-            }
+
         }) //return 
 } //end loadMC
 
@@ -740,15 +746,18 @@ function loadDC(contentXML) {
                 template.querySelector(".quiz_options").innerHTML = opt;
 
                 data += template.body.innerHTML;
+
+                if (optns.text()) {
+                    //console.log(data);
+                    quizContainer.innerHTML = data;
+                    resolve("loaded");
+                } else {
+                    reject("Could not load activity!")
+                }
+
             }); //end outer loop
 
-            if (data) {
-                //console.log(data);
-                quizContainer.innerHTML = data;
-                resolve("loaded");
-            } else {
-                reject("Could not load activity!")
-            }
+
         }) //return 
 }
 
