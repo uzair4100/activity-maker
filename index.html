@@ -35,20 +35,34 @@
                 </div>
             </div>
 
-            <!--===================Activity Type===========================-->
-            <div class="d-flex justify-content-start align-items-start mb-2">
-                <div class="h5 mr-3">Activity Type:</div>
-                <select class="form-select form-select-sm" id="activityType">
-                <option selected>-----------------</option>
-                <option value="1">Select Item</option>
-                <option value="2">Sentence Builder</option>
-                <option value="3">Vertical Arrange</option>
-                <option value="4">Horizontal Arrange</option>
-                <option value="5">Multiple Choice</option>
-                <option value="6">Drag Category</option>
-                <!--<option value="7">Text Input</option>-->
-                <option value="8">Sound Recorder</option>
-               </select>
+            <!--===================Activity Type & layout===========================-->
+            <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-start align-items-start mb-2">
+                    <div class="h5 mr-3">Activity Type:</div>
+                    <select class="form-select form-select-sm" id="activityType">
+                        <option selected>-----------------</option>
+                        <option value="1">Select Item</option>
+                        <option value="2">Sentence Builder</option>
+                        <option value="3">Vertical Arrange</option>
+                        <option value="4">Horizontal Arrange</option>
+                        <option value="5">Multiple Choice</option>
+                        <option value="6">Drag Category</option>
+                        <option value="7">Text Input</option>
+                        <option value="8">Sound Recorder</option>
+                    </select>
+                </div>
+
+                <div class="d-flex justify-content-start align-items-start mb-2">
+                    <div class="h5 mr-3">Layout:</div>
+                    <select class="form-select form-select-sm" id="layout">
+                        <option selected></option>
+                        <option value="1">textinput1</option>
+                        <option value="2">textinput2</option>
+                        <option value="3">sentencebuilder1</option>
+                        <option value="4">sentencebuilder2</option>
+                        <option value="5">custom</option>
+                   </select>
+                </div>
             </div>
 
             <!--==================structure======================================-->
@@ -370,26 +384,42 @@
 
         </div>
 
-        <div class="w-100 p-0 mb-2 border border-dark quiz textinput">
+        <div class="w-100 p-0 quiz textinput">
             <div class="bg-dark text-white w-100 d-flex justify-content-between px-1 heading">
                 <div class="no">1</div>
+                <button id="show_bulk" class="btn btn-outline-warning btn-sm">Show Panel</button>
                 <div class="del_quiz">X</div>
             </div>
-            <div class="input-group d-flex justify-content-center">
-                <textarea id="clueText" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control mt-1 mx-2" rows="1"></textarea>
-            </div>
-            <div class="px-5 mb-2 w-100">
-                <div class="w-100 m-0 p-0 quiz_options">
-                    <div class="input-group my-2 option">
-                        <div class="d-flex w-100 h-auto">
-                            <div class="input-group">
-                                <textarea onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control option_value" rows="1"></textarea>
-                            </div>
-                            <button class="del">X</button>
+
+            <div class="border border-dark px-5 mb-2 w-100">
+                <div class="my-1 makeOptionWrapper">
+                    <textarea style="width: 50%;float:left;" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control bulk_value" rows="1"></textarea>
+                    <div style="float:right;">
+                        <button class="btn-outline-info btn-sm mb-1" id="bulk_option">Add Options</button>
+                        <button class="btn-outline-secondary btn-sm mb-1" id="bulk_clue">Add Clues</button>
+                        <button class="btn-outline-success btn-sm mb-1" id="bulk_sentence">Add Sentences</button>
+                    </div>
+                </div>
+
+                <div class="input-group m-1">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Clue Text</span>
+                    </div>
+                    <div id="clueText" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control clue"></div>
+                    <!-- <textarea id="clueText" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control clue" rows="1"></textarea> -->
+                </div>
+
+                <div class="input-group my-1 d-flex align-items-center justify-content-between">
+                    <div class="input-group m-1">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">Sentence</span>
+                        </div>
+                        <textarea id="sentence" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control sentence" rows="1"></textarea>
+                        <div class="input-group-append">
+                            <button id="wrap" class="btn-outline-info h-50 ml-1">Wrap</button>
                         </div>
                     </div>
                 </div>
-                <img class="addOption" src="https://img.icons8.com/metro/30/000000/plus.png" />
             </div>
         </div>
     </div>

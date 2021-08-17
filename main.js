@@ -28,7 +28,10 @@ app.on('ready', function() {
         protocol: 'file',
         slashes: true
     }));
-    mainWindow.webContents.openDevTools();
+
+    if (isDev) {
+        mainWindow.webContents.openDevTools();
+    }
     mainWindow.autoHideMenuBar = true;
 
     console.log('App loaded...');

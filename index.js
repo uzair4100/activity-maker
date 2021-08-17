@@ -38,6 +38,7 @@ var filePath,
     help = "",
     helpContent = "",
     activity,
+    layout,
     textSelected,
     quiz = "",
     audioFiles = [],
@@ -67,6 +68,7 @@ var textinputQuiz = document.querySelector(".textinput").outerHTML;
 var quizContainer = document.getElementById("quiz_container");
 const status = document.getElementById("status");
 const activityType = document.getElementById("activityType");
+const layoutType = document.getElementById("layout");
 const templateFolder = "\\\\vsl-file01\\coursesdev$\\template";
 const fullstops = [".", "。", "|", "?", "!", ",", "，"];
 const wrap = document.getElementById("wrap");
@@ -82,6 +84,7 @@ modal.style.display = "none";
 checkUpdates();
 //load activity event handler
 document.querySelector("#load").addEventListener("click", function() {
+
     help = "";
     filePath = document.querySelector("#filePath").value;
     attrRemover();
@@ -184,14 +187,16 @@ document.addEventListener("click", function(e) {
                 el.innerHTML = text;
                 el.value = el.innerHTML;
                 //set option
-                let opt = `<div class="input-group mt-1 option">
-                            <input type="text" class="form-control option_value" value="${word}"/>
-                            <button class="del">X</button>
-                        </div>`;
-                let optns = [];
-                let ops = el.closest(".sentencebuilder").querySelectorAll(".option_value");
-                ops.forEach((op) => optns.push(op.value));
-                !optns.includes(word) ? el.closest(".sentencebuilder").querySelector(".quiz_options").insertAdjacentHTML("beforeend", opt) : ""; //append option only if it's not there
+                if (activity == "Sentence Builder") {
+                    let opt = `<div class="input-group mt-1 option">
+                                    <input type="text" class="form-control option_value" value="${word}"/>
+                                    <button class="del">X</button>
+                                </div>`;
+                    let optns = [];
+                    let ops = el.closest(".sentencebuilder").querySelectorAll(".option_value");
+                    ops.forEach((op) => optns.push(op.value));
+                    !optns.includes(word) ? el.closest(".sentencebuilder").querySelector(".quiz_options").insertAdjacentHTML("beforeend", opt) : ""; //append option only if it's not there
+                }
             }
         }
     }
@@ -473,9 +478,10 @@ function charConverter(line) {
 
 document.querySelector("#submit").addEventListener("click", function() {
     let actName = filePath.split("\\");
-    let name =
-        actName[6] + "/" + actName[7] + "/" + actName[8] + "/" + actName[9];
-    if (confirm("Update " + name + " ?")) {
+    let name = actName[6] + "/" + actName[7] + "/" + actName[8] + "/" + actName[9];
+    layout = layoutType.options[layoutType.selectedIndex].text.trim();
+    console.log(layout);
+    if (confirm("Update " + name + " ?" + layout)) {
         arrange(".quiz");
         let xmlTemplate, content;
         //find template
@@ -677,7 +683,7 @@ function activityFinder(filePath) {
     if ($("action[type=validateChoices]").length) {
         Type = "Select Item";
     }
-    if ($("action[type=setHTML]").length) {
+    if ($("item[type=sentenceTextInput]").length) {
         Type = "Text Input";
     }
     if ($("item[type=sentenceButtons]").length) {
@@ -698,7 +704,7 @@ function activityFinder(filePath) {
     console.log(Type);
     let opt = document.querySelectorAll("option");
     console.log(opt);
-
+    type = "sentenceTextInput"
     for (let i = 0; i < opt.length; i++) {
         opt[i].innerHTML == Type ? (opt[i].selected = true) : "";
     }
@@ -717,7 +723,9 @@ function fetcher(exist, callFunction, filePath, template) {
                     // document.getElementById('font_ascii').click()
             })
             .catch(function(err) {
-                quizContainer.innerHTML = `<div class="alert alert-danger" role="alert">Could not load  activity &#128547;</div>`;
+                quizContainer.innerHTML = err;
+
+                // quizContainer.innerHTML = `<div class="alert alert-danger" role="alert">Could not load  activity &#128547;</div>`;
             });
     } else {
         quizContainer.innerHTML = template;
