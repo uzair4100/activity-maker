@@ -1,4 +1,6 @@
-function loadSB(contentXML) {
+const { attr } = require("cheerio/lib/api/attributes");
+
+function loadSB(contentXML, webInteractive) {
     return new Promise(function(resolve, reject) {
 
         let fileContent = fs.readFileSync(contentXML, "utf-8");
@@ -6,19 +8,25 @@ function loadSB(contentXML) {
         let data = "";
         let options_random = document.getElementById("options_random");
 
-        $("item[btn=Audio]").length ? document.querySelector("#clue_audio").checked = true : ""; //find audio clues
+        //check buttons
+        $("action[type=setImage]").length ? document.querySelector("#clue_image").checked = true : ""; //find audio clues mp3 player
+        $("item[btn=Audio]").length || $("item[btn=btn-audio]").length ? document.querySelector("#clue_audio").checked = true : ""; //find audio clues button
+        $("item[type=mp3player]").length ? document.querySelector("#clue_audioPlayer").checked = true : ""; //find audio clues mp3 player
         $("item[randomise=yes]").length ? options_random.checked = true : ""; //find if options are randomised
         //getLanguage($("item[type=sentenceButtons]").eq(0).text())
 
-
+        console.log(webInteractive)
         $("frame:not(:eq(0))").each(function(i) {
             let template = new DOMParser().parseFromString(sentencebuilderQuiz, "text/html");
             // !$("item[type=sentenceButtons]").length ? reject("Invalid Activity Type") : ""; //reject if not sententce builder
             let no = i + 1;
             let optns = $(this).find("option");
             let opt = "";
-            let clueText = $(this).find("action[type=setText]").text().trim(); //text beacuse it may be in CDATA
-            let sentence = $(this).find("item[type=sentenceButtons]").attr("sentence").trim();
+            let clueText = $(this).find("action[tbox=clueTxt]").text().trim(); //text beacuse it may be in CDATA
+            let sentence = "";
+            //webInteractive ? sentence = $(this).find('sentence').text() : sentence = $(this).find("item[type=sentenceButtons]").attr("sentence");
+            $(this).find("item[type=sentenceButtons]").attr("sentence") ? sentence = $(this).find("item[type=sentenceButtons]").attr("sentence").trim() : sentence = $(this).find('sentence').text(); // handle old and new template
+
             //set options
             optns.each(function() {
                 let optionTemplate = new DOMParser().parseFromString(template.querySelector(".quiz_options").innerHTML, "text/html");
@@ -51,6 +59,7 @@ function loadSB(contentXML) {
 } //end loadSB
 
 function updateSB(XML) {
+    // alert(webInteractive)
     //change dom value
     optionValue = quizContainer.querySelectorAll("input[type=text]");
     for (let i = 0; i < optionValue.length; i++) {
@@ -71,23 +80,34 @@ function updateSB(XML) {
 
     let data = "",
         content = "",
-        random_value;
+        layout = "",
+        random_value,
+        lineBreaker = "";
     options_random.checked ? random_value = "yes" : random_value = "no";
     //loop through quizzes
     for (let i = 0; i < quizzesArray.length; i++) {
         let quiz = quizzesArray[i],
             clueAudio = "",
-            sound = "";
+            sound = "",
+            clueImage = "",
+            sentenceHandler = "";
 
         let sentence = quiz.querySelector("#sentence").innerHTML;
-        sentence.includes("\n") ? sentence = sentence.split("\n").join(" &#xD;") : ""; //add line breaks in multi line sentence
+
+        webInteractive == true ? lineBreaker = "<br>" : lineBreaker = " &#xD;";
+        //sentence = sentence.replace(/\&lt;/g, "<").replace(/\&gt;/g, ">");
+        sentence.includes("\n") && !sentence.includes("<tr>") ? sentence = sentence.split("\n").join(lineBreaker) : ""; //add line breaks in multi line sentence if it's not table
 
         let clueText = quiz.querySelector(".ql-editor").innerHTML; //fetch text from quill because editor attached with clues field
         clueText = clueText.replace('<p>', '').replace('</p>', '').replace(/<p><br[\/]?><[\/]?p>/g, '').replace(/(&nbsp;|<br>|<br \/>)/gm, '').replace(/\>\s+\</g, '><'); //remove need <p> tags
         parseInt(i + 1) < 10 ? sound = `s00${i+1}` : sound = `s0${i+1}`;
         document.getElementById("onCorrect_audio").checked == true ? (playAudio = `<action type="delay" secs="0.5"/><action type="playSound" wait="yes" file="${sound}.mp3"></action>`) : playAudio = "";
-        document.getElementById("clue_audio").checked == true ? (clueAudio = `<item type="button" btn="Audio"><action type="playSound" file="${sound}.mp3" wait="no"></action></item><action type="playSound" file="${sound}.mp3" wait="no"></action>`) : clueAudio = "";
-
+        document.getElementById("clue_audio").checked == true ? (clueAudio = `<item type="button" btn="${webInteractive?`btn-audio`:`Audio`}"><action type="playSound" file="${sound}.mp3" wait="no"></action></item><action type="playSound" file="${sound}.mp3" wait="no"></action>`) : "";
+        document.getElementById("clue_audioPlayer").checked == true ? clueAudio = `<item type="mp3player" sym="mp3player_1" file="${sound}.mp3"/>` : "";
+        document.getElementById("clue_image").checked == true ? (clueImage = `<action type="setImage" img="image-clue" src="image${i+1}.jpg"/>`) : clueImage = "";
+        if (require("fs").existsSync(path.join(filePath, `content.xml`))) {
+            require("fs").existsSync(path.join(filePath, `image${i+1}.jpg`)) ? "" : clueImage = "";   //add image only if image1.jpg exists
+        }
 
         let no = i + 2;
         let opt = "",
@@ -106,18 +126,26 @@ function updateSB(XML) {
             }
         }
         values.filter(val => typeof(val) !== undefined && val != "").map((val, v) => opt += `<option sym="opt_${v}">${val.trim()}</option>`);
-        clueText ? clueLine = `<action type="setText" tbox="clueTxt"><![CDATA[${clueText}]]></action>` : clueLine = ""; //add clueline if cluetext exists
+        clueText ? clueLine = `<action type="setHTML" tbox="clueTxt"><![CDATA[${clueText}]]></action>` : clueLine = ""; //add clueline if cluetext exists
+
+        if (webInteractive) {
+            sentenceHandler = `${clueImage}<action type="show" sym="clue-spacer"/><item type="sentenceButtons" randomise="${random_value}" sentenceTextBox="sentenceText"  markSym="mark" >
+                                    <sentence><![CDATA[ ${sentence} ]]></sentence>
+                                    <textbox sym="sentenceText" />
+                                    <clearButton sym="btnClear" />
+                                    <checkButton sym="btnCheck"/>${opt}
+                                </item>`
+        } else {
+            sentenceHandler = `<item type="sentenceButtons" randomise="${random_value}" sentenceTextBox="sentenceText" markSym="mark" sentence="${sentence}">
+                                        <textbox sym="sentenceText"/><clearButton sym="btnClear"/><checkButton sym="btnCheck"/>${opt}
+                                </item>`;
+        }
 
         let frameContent = `<frame num="${no}">
                                 <action type="playSound" file="prompt.mp3"></action>
                                 <action type="show" sym="btnCheck" />
                                 <action type="show" sym="btnClear" />
-                                <item type="sentenceButtons" randomise="${random_value}" sentenceTextBox="sentenceText"  sentence="${sentence}" markSym="mark" >
-                                    <textbox sym="sentenceText" />
-                                    <clearButton sym="btnClear" />
-                                    <checkButton sym="btnCheck"/>
-                                    ${opt}
-                                </item>
+                               ${sentenceHandler}
                                 ${clueLine}${clueAudio}
                                 <action type="waitTest"></action>${playAudio}
                                 <action type="hide" sym="btnCheck" />
@@ -130,6 +158,11 @@ function updateSB(XML) {
     console.log(data)
     data = prettifyXml(data, { indent: 4 })
     template.querySelector("activity").innerHTML = name;
+    layout = layoutType.options[layoutType.selectedIndex].text.trim();
+    layout != "" ? template.querySelector("content").setAttribute('layout', layout) : "";
+    layout != "" ? template.querySelector("content").setAttribute('template', activity.toLowerCase().replace(/\s/g, "")) : "";
+    accents != "" ? template.querySelector("content").setAttribute('accents', accents.toLowerCase().replace(/\s/g, "")) : "";
+
     template.querySelector("end").insertAdjacentHTML("beforebegin", data);
     content = new XMLSerializer().serializeToString(template);;
     return content;
@@ -264,7 +297,8 @@ function updateSI(XML) {
                 isOptionImage ? frame = ` frame="${v+1}"` : frame = "";
                 // console.log(frame)
                 val.trim() == correct.trim() ? correctFrame = ` correctFrame="1"` : "";
-                val.includes('&') ? val = `<![CDATA[${val.trim()}]]>` : ""; //for mostly punjabi font '&' makes xml file invalid
+              //  val.includes('&') ? val = `<![CDATA[${val.trim()}]]>` : ""; //for mostly punjabi font '&' makes xml file invalid
+              val = `<![CDATA[${val.trim()}]]>`
                 opt += `<item type="choiceFrames" sym="opt_${v}"${correctFrame}${frame}>${val.trim()}</item>`
             }); //<![CDATA[fdfdf]]
         } else {
@@ -278,7 +312,7 @@ function updateSI(XML) {
             }
         }
         opt = opt.replace(/\>\s+\</g, '');
-
+        
         console.log(opt)
             ///////////
         let frameContent = `<frame num="${i + 2}">
@@ -325,8 +359,8 @@ function loadVA(contentXML) {
             data = "";
         let template = new DOMParser().parseFromString(verticalarrangeQuiz, "text/html");
         let quizTemplate = new DOMParser().parseFromString(template.querySelector(".option").outerHTML, "text/html");
-
-        //  !$("questions").attr("randomise_left_column") ? reject("Invalid Activity Type") : ""; //check for vertical arrange template
+        let options_audio = document.getElementById("options_audio");
+          $("left").attr("audio") ? options_audio.checked=true:"";
 
         $("quiz").each(function(i) {
             let inputs = quizTemplate.querySelectorAll(".option_value");
@@ -943,29 +977,22 @@ function loadTI(contentXML) {
         let fileContent = fs.readFileSync(contentXML, "utf-8");
         let $ = cheerio.load(fileContent, { xmlMode: true, decodeEntities: false });
         let data = "";
-        let options_random = document.getElementById("options_random");
-
-        $("item[btn=Audio]").length ? document.querySelector("#clue_audio").checked = true : ""; //find audio clues
-        $("item[randomise=yes]").length ? options_random.checked = true : ""; //find if options are randomised
+        let clue_image = document.getElementById('clue_image');
+        $('frame').children().last().attr('type') == "delay" ? document.querySelector("#onCorrect_audio").checked = true : ""; //find play audio on correct
+        $("action[type=setImage]").length ? document.querySelector("#clue_image").checked = true : ""; //find audio clues mp3 player
+        $("item[btn=Audio]").length || $("item[btn=btn-audio]").length ? document.querySelector("#clue_audio").checked = true : ""; //find audio clues button
+        $("item[type=mp3player]").length ? document.querySelector("#clue_audioPlayer").checked = true : ""; //find audio clues mp3 player
+        $("action[type=setImage]").length ? clue_image.checked = true : ""; //find image clues
         //getLanguage($("item[type=sentenceButtons]").eq(0).text())
-
 
         $("frame:not(:eq(0))").each(function(i) {
             let template = new DOMParser().parseFromString(textinputQuiz, "text/html");
             let no = i + 1;
-            let optns = $(this).find("option");
-            let opt = "";
-            let clueText = $(this).find("action[type=setText]").text().trim(); //text beacuse it may be in CDATA
-            let sentence = $(this).find("item[type=sentenceTextInput]").attr("sentence").trim();
-            //set options
-            optns.each(function() {
-                let optionTemplate = new DOMParser().parseFromString(template.querySelector(".quiz_options").innerHTML, "text/html");
 
-                let optText = $(this).text().trim();
-                console.log(optText)
-                optionTemplate.querySelector(".option_value").setAttribute("value", optText);
-                opt += optionTemplate.body.innerHTML;
-            }); //end option loop
+            let clueText = $(this).find("action[tbox=clueTxt]").text().trim(); //text beacuse it may be in CDATA
+            let sentence = "";
+            $(this).find('sentence').text() ? sentence = $(this).find('sentence').text() : sentence = $(this).find("item[type=sentenceTextInput]").attr("sentence").trim(); // handle old and new template
+
             console.log(clueText)
             template.querySelector("#clueText").innerHTML = clueText;
             template.querySelector("#sentence").innerHTML = sentence;
@@ -973,10 +1000,9 @@ function loadTI(contentXML) {
 
             data += template.body.innerHTML;
 
-
         }); //end outer loop
 
-        if (sentence || optns) {
+        if (sentence || clueText) {
             //console.log(data);
             quizContainer.innerHTML = data;
             resolve("loaded");
@@ -985,89 +1011,78 @@ function loadTI(contentXML) {
         }
 
     })
-} //end loadSB
+} //end loadTI
 
 function updateTI(XML) {
     //change dom value
-    optionValue = quizContainer.querySelectorAll("input[type=text]");
-    for (let i = 0; i < optionValue.length; i++) {
-        optionValue[i].setAttribute("value", optionValue[i].value);
-    }
     let textarea = quizContainer.querySelectorAll("textarea");
     for (let i = 0; i < textarea.length; i++) {
         textarea[i].innerHTML = textarea[i].value;
     }
-    let options_random = document.getElementById("options_random");
     let template = new DOMParser().parseFromString(XML, "application/xml");
     console.log(template)
 
-    let actName = filePath.split("\\");
+    let actName = filePath.split("\\"),lineBreaker="";
     let name = actName[6] + " " + actName[8] + "/" + actName[9];
     let quizzes = new DOMParser().parseFromString(quizContainer.innerHTML, "text/html")
-    let quizzesArray = quizzes.querySelectorAll(".sentencebuilder");
+    let quizzesArray = quizzes.querySelectorAll(".textinput");
 
     let data = "",
-        content = "",
-        random_value;
-    options_random.checked ? random_value = "yes" : random_value = "no";
+        content = "";
     //loop through quizzes
     for (let i = 0; i < quizzesArray.length; i++) {
         let quiz = quizzesArray[i],
             clueAudio = "",
+            clueImage = "",
             sound = "";
 
         let sentence = quiz.querySelector("#sentence").innerHTML;
-        sentence.includes("\n") ? sentence = sentence.split("\n").join(" &#xD;") : ""; //add line breaks in multi line sentence
+        webInteractive == true ? lineBreaker = "<br>" : lineBreaker = " &#xD;";
+        sentence.includes("\n") ? sentence = sentence.split("\n").join(lineBreaker) : ""; //add line breaks in multi line sentence
 
         let clueText = quiz.querySelector(".ql-editor").innerHTML; //fetch text from quill because editor attached with clues field
         clueText = clueText.replace('<p>', '').replace('</p>', '').replace(/<p><br[\/]?><[\/]?p>/g, '').replace(/(&nbsp;|<br>|<br \/>)/gm, '').replace(/\>\s+\</g, '><'); //remove need <p> tags
         parseInt(i + 1) < 10 ? sound = `s00${i+1}` : sound = `s0${i+1}`;
-        document.getElementById("onCorrect_audio").checked == true ? (playAudio = `<action type="delay" secs="0.5"/><action type="playSound" wait="yes" file="${sound}.mp3"></action>`) : playAudio = "";
-        document.getElementById("clue_audio").checked == true ? (clueAudio = `<item type="button" btn="Audio"><action type="playSound" file="${sound}.mp3" wait="no"></action></item><action type="playSound" file="${sound}.mp3" wait="no"></action>`) : clueAudio = "";
-
+        document.getElementById("onCorrect_audio").checked == true ? (playAudio = `<action type="delay" secs="0.5"/><action type="playSound" wait="yes" file="${sound}.mp3"></action><action type="delay" secs="0.5"/>`) : playAudio = "";
+        document.getElementById("clue_audio").checked == true ? (clueAudio = `<item type="button" btn="${webInteractive?`btn-audio`:`Audio`}"><action type="playSound" file="${sound}.mp3" wait="no"></action></item><action type="playSound" file="${sound}.mp3" wait="no"></action>`) : "";
+        document.getElementById("clue_audioPlayer").checked == true ? clueAudio = `<item type="mp3player" sym="mp3player_1" file="${sound}.mp3"/>` : "";
+        document.getElementById("clue_image").checked == true ? (clueImage = `<action type="setImage" img="image-clue" src="image${i+1}.jpg"/>`) : clueImage = "";
+        if (require("fs").existsSync(path.join(filePath, `content.xml`))) {
+            require("fs").existsSync(path.join(filePath, `image${i+1}.jpg`)) ? "" : clueImage = "";
+        }
 
         let no = i + 2;
-        let opt = "",
-            clueLine = "",
-            values = [];
+        clueLine = "";
 
-        //loop through options
-        let options = quiz.querySelectorAll(".option_value");
-        console.log(options)
-            //add all option values in one array
-        for (let j = 0; j < options.length; j++) {
+        clueText ? clueLine = `<action type="setHTML" tbox="clueTxt"><![CDATA[${clueText}]]></action>` : clueLine = ""; //add clueline if cluetext exists
 
-            let opt_text = options[j].getAttribute("value").trim();
-            if (opt_text.length) {
-                (opt_text.includes("*")) ? values = values.concat(opt_text.split("*")): values.push(opt_text);
-            }
-        }
-        values.filter(val => typeof(val) !== undefined && val != "").map((val, v) => opt += `<option sym="opt_${v}">${val.trim()}</option>`);
-        clueText ? clueLine = `<action type="setText" tbox="clueTxt"><![CDATA[${clueText}]]></action>` : clueLine = ""; //add clueline if cluetext exists
-
-        let frameContent = `<frame num="${no}">
-                                <action type="playSound" file="prompt.mp3"></action>
-                                <action type="show" sym="btnCheck" />
-                                <action type="show" sym="btnClear" />
-                                <item type="sentenceButtons" randomise="${random_value}" sentenceTextBox="sentenceText"  sentence="${sentence}" markSym="mark" >
-                                    <textbox sym="sentenceText" />
-                                    <clearButton sym="btnClear" />
-                                    <checkButton sym="btnCheck"/>
-                                    ${opt}
+        let frameContent = `
+                            <frame num="${no}">
+                                <action type="playSound" file="prompt.mp3"/>
+                                <action type="show" sym="btnCheck"/>${clueLine}
+                                ${clueAudio}  
+                                ${clueImage}  
+                                <action type="show" sym="clue-spacer"/>                         
+                                <item type="sentenceTextInput" sentenceTextBox="sentenceText" _gaplength="3">
+                                    <sentence><![CDATA[ ${sentence} ]]></sentence>
                                 </item>
-                                ${clueLine}${clueAudio}
-                                <action type="waitTest"></action>${playAudio}
-                                <action type="hide" sym="btnCheck" />
-                                <action type="hide" sym="btnClear" />
-                                <action type="delay" secs="1.5"/>
-                            </frame>${"\n\n"}`;
+                                
+                                <action type="waitTest"/>${playAudio}
+                            </frame>
+                        `;
         console.log(frameContent)
         data += frameContent;
     } //end loop
     console.log(data)
     data = prettifyXml(data, { indent: 4 })
     template.querySelector("activity").innerHTML = name;
-    template.querySelector("end").insertAdjacentHTML("beforebegin", data);
+    layout = layoutType.options[layoutType.selectedIndex].text.trim();
+    accents = accentsType.options[accentsType.selectedIndex].text.trim();
+    layout != "" ? template.querySelector("content").setAttribute('layout', layout) : "";
+    layout != "" ? template.querySelector("content").setAttribute('template', activity.toLowerCase().replace(/\s/g, "")) : "";
+    accents != "" ? template.querySelector("content").setAttribute('accents', accents.toLowerCase().replace(/\s/g, "")) : "";
+
+    template.querySelector("frames").insertAdjacentHTML("beforeend", data);
     content = new XMLSerializer().serializeToString(template);;
     return content;
-} //end updateSB function
+} //end updateTI function

@@ -58,9 +58,21 @@
                         <option selected></option>
                         <option value="1">textinput1</option>
                         <option value="2">textinput2</option>
-                        <option value="3">sentencebuilder1</option>
-                        <option value="4">sentencebuilder2</option>
-                        <option value="5">custom</option>
+                        <option value="3">textinput3</option>
+                        <option value="4">sentencebuilder1</option>
+                        <option value="5">sentencebuilder2</option>
+                        <option value="6">sentencebuilder3</option>
+                        <option value="7">CUSTOM</option>
+                   </select>
+                </div>
+
+                <div class="d-flex justify-content-start align-items-start mb-2">
+                    <div class="h5 mr-3">Accents:</div>
+                    <select class="form-select form-select-sm" id="accents">
+                        <option selected></option>
+                        <option value="1">accents1</option>
+                        <option value="2">accents2</option>
+                        <option value="2">accentsall</option>
                    </select>
                 </div>
             </div>
@@ -78,6 +90,14 @@
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="checkbox" id="clue_audio" />
                             <label class="form-check-label" for="clue_audio">Audio</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="clue_audioPlayer" />
+                            <label class="form-check-label" for="clue_audioPlayer">Audio Player</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="clue_image" />
+                            <label class="form-check-label" for="clue_image">Image</label>
                         </div>
                     </div>
                     <!--end clue-->
@@ -283,8 +303,9 @@
                             <span class="input-group-text">Sentence</span>
                         </div>
                         <textarea id="sentence" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control sentence" rows="1"></textarea>
-                        <div class="input-group-append">
+                        <div class="input-group-append d-flex flex-column">
                             <button id="wrap" class="btn-outline-info h-50 ml-1">Wrap</button>
+                            <div class="ml-2" role='button' data-toggle="tooltip" data-placement="bottom" title="Make table"><img id="table" src="https://img.icons8.com/fluency/25/000000/table-1.png" /></div>
                         </div>
                     </div>
                 </div>
@@ -393,9 +414,8 @@
 
             <div class="border border-dark px-5 mb-2 w-100">
                 <div class="my-1 makeOptionWrapper">
-                    <textarea style="width: 50%;float:left;" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control bulk_value" rows="1"></textarea>
+                    <textarea style="width: 60%;float:left;" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control bulk_value mb-1" rows="1"></textarea>
                     <div style="float:right;">
-                        <button class="btn-outline-info btn-sm mb-1" id="bulk_option">Add Options</button>
                         <button class="btn-outline-secondary btn-sm mb-1" id="bulk_clue">Add Clues</button>
                         <button class="btn-outline-success btn-sm mb-1" id="bulk_sentence">Add Sentences</button>
                     </div>
@@ -406,7 +426,6 @@
                         <span class="input-group-text">Clue Text</span>
                     </div>
                     <div id="clueText" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control clue"></div>
-                    <!-- <textarea id="clueText" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control clue" rows="1"></textarea> -->
                 </div>
 
                 <div class="input-group my-1 d-flex align-items-center justify-content-between">
@@ -415,8 +434,9 @@
                             <span class="input-group-text">Sentence</span>
                         </div>
                         <textarea id="sentence" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control sentence" rows="1"></textarea>
-                        <div class="input-group-append">
+                        <div class="input-group-append d-flex flex-column">
                             <button id="wrap" class="btn-outline-info h-50 ml-1">Wrap</button>
+                            <div class="ml-2" role='button' data-toggle="tooltip" data-placement="bottom" title="Make table"><img id="table" src="https://img.icons8.com/fluency/25/000000/table-1.png" /></div>
                         </div>
                     </div>
                 </div>
@@ -433,7 +453,7 @@
     <script type="text/javascript" src="modules.js"></script>
     <!--<script type="text/javascript" src="jquery-ui.min.js"></script>-->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-
+    <!-- <table><tr><td>visiter<br>voir<br>parler</td><td>prendre<br>plaire</td><td>passer<br>manger</td><td>admirer<br>comprendre</td><td>acheter<br>faire</td></tr></table> -->
 
 </body>
 

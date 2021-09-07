@@ -53,6 +53,15 @@
         const content = document.getElementById("content");
         var editor;
 
+        // set Quill to use <b> and <i>, not <strong> and <em> 
+        var bold = Quill.import('formats/bold');
+        bold.tagName = 'b'; // Quill uses <strong> by default
+        Quill.register(bold, true);
+
+        var italic = Quill.import('formats/italic');
+        italic.tagName = 'i'; // Quill uses <em> by default
+        Quill.register(italic, true);
+
         //recieve data from main and fill in editor
         ipcRenderer.on("help-window", function(e, data) {
             content.innerHTML = data; //fill help file data
@@ -70,7 +79,8 @@
                                 'list': 'ordered'
                             }, {
                                 'list': 'bullet'
-                            }]
+                            }],
+                            ['clean']
                         ]
                     },
                     placeholder: "Instructions in language \n Instructions in English",
@@ -90,9 +100,9 @@
             data = new DOMParser().parseFromString(data, "text/html");
             let childs = data.body.childNodes;
             for (let i = 0; i < childs.length; i++) {
-                if (childs[i].nodeName == "H3" && childs[i].childElementCount) {
-                    childs[i].innerHTML = childs[i].innerText
-                }
+                // if (childs[i].nodeName == "H3" && childs[i].childElementCount) {
+                //     childs[i].innerHTML = childs[i].innerText
+                // }
                 let text = childs[i].innerText.trim()
                 if (!text.length) {
                     childs[i].remove()
@@ -101,7 +111,7 @@
             let heading3 = data.querySelectorAll('h3');
 
             if (heading3.length > 1) {
-                heading3[0].insertAdjacentHTML("beforebegin", "<!-- lote -->");
+                heading3[0].insertAdjacentHTML("beforebegin", "<!-- LOTE -->");
                 heading3[1].insertAdjacentHTML("beforebegin", "<!-- ENGLISH -->");
             }
 

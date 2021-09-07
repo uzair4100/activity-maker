@@ -11,18 +11,8 @@ const copy = require("recursive-copy");
 const os = require("os");
 const axios = require('axios').default;
 const { toAscii, toUnicode, toEnglish, isGurmukhi } = require('gurmukhi-utils');
-
-const unicodeGurmukhi = '  ਦਮਨ ਨੇ ਇਸ਼ਨਾਨ ਕੀਤਾ।';
-console.log(toAscii(unicodeGurmukhi))
-var ss = '  dmn [ny] ieSnwn kIqw[';
-let uni = toUnicode(ss)
-console.log(uni);
-ss = toAscii(uni)
-console.log(ss);
-uni = toUnicode(ss)
-console.log(uni);
-ss = toAscii(uni)
-console.log(ss);
+const newInteractiveLanguage = ["french", "german", "indonesian", "japanese", "french"];
+const newInteractiveYear = ["year10"];
 // set Quill to use <b> and <i>, not <strong> and <em> 
 var bold = Quill.import('formats/bold');
 bold.tagName = 'b'; // Quill uses <strong> by default
@@ -31,18 +21,20 @@ Quill.register(bold, true);
 var italic = Quill.import('formats/italic');
 italic.tagName = 'i'; // Quill uses <em> by default
 Quill.register(italic, true);
-
-//variables
+console.log(toAscii('ਬਰਾਬਰ ਸਿੱਖਿਆ'))
+    //variables
 var filePath,
     optionValue,
     help = "",
     helpContent = "",
     activity,
-    layout,
-    textSelected,
+    layout = "",
+    accents = "",
+    webInteractive = "",
     quiz = "",
-    audioFiles = [],
-    quill = [];
+
+    quillClue = [];
+quillSentence = [];
 var source = path.join(require("os").homedir(), "id01/content.xml");
 
 //xml templates
@@ -69,6 +61,7 @@ var quizContainer = document.getElementById("quiz_container");
 const status = document.getElementById("status");
 const activityType = document.getElementById("activityType");
 const layoutType = document.getElementById("layout");
+const accentsType = document.getElementById("accents");
 const templateFolder = "\\\\vsl-file01\\coursesdev$\\template";
 const fullstops = [".", "。", "|", "?", "!", ",", "，"];
 const wrap = document.getElementById("wrap");
@@ -88,7 +81,10 @@ document.querySelector("#load").addEventListener("click", function() {
     help = "";
     filePath = document.querySelector("#filePath").value;
     attrRemover();
-    (quizContainer.innerHTML = ""), (audioFiles = []);
+    let actName = filePath.split("\\");
+    (actName[5] == "2022" && newInteractiveLanguage.includes(actName[6]) && newInteractiveYear.includes(actName[7])) ? webInteractive = true: webInteractive = false; //check if it's web interactive
+    console.log(webInteractive)
+    quizContainer.innerHTML = "";
 
     let fileExist = fs.existsSync(path.join(filePath, "content.xml"));
 
@@ -100,48 +96,48 @@ document.querySelector("#load").addEventListener("click", function() {
     switch (activity) {
         case "Select Item":
             //   audioFiles = ["correct.mp3", "prompt.mp3", "select.mp3", "wrong.mp3"];
-            fetcher(fileExist, loadSI(contentFile), filePath, selectitemQuiz);
+            fetcher(fileExist, loadSI(contentFile, webInteractive), filePath, selectitemQuiz);
             break;
 
         case "Vertical Arrange":
             document.getElementById("addQuiz").setAttribute("disabled", true);
             document.getElementById("duplicate").setAttribute("disabled", true);
-            fetcher(fileExist, loadVA(contentFile), filePath, verticalarrangeQuiz);
+            fetcher(fileExist, loadVA(contentFile, webInteractive), filePath, verticalarrangeQuiz);
             break;
 
         case "Horizontal Arrange":
             audioFiles = ["silence.mp3"];
             document.getElementById("addQuiz").setAttribute("disabled", true);
             document.getElementById("duplicate").setAttribute("disabled", true);
-            fetcher(fileExist, loadHA(contentFile), filePath, horizontalarrangeQuiz);
+            fetcher(fileExist, loadHA(contentFile, webInteractive), filePath, horizontalarrangeQuiz);
             break;
 
         case "Sentence Builder":
             audioFiles = ["drop.mp3", "prompt.mp3", "tap.mp3", "wrong.mp3"];
-            fetcher(fileExist, loadSB(contentFile), filePath, sentencebuilderQuiz);
+            fetcher(fileExist, loadSB(contentFile, webInteractive), filePath, sentencebuilderQuiz);
             break;
 
         case "Multiple Choice":
             document.getElementById("help").setAttribute("disabled", true);
-            fetcher(fileExist, loadMC(contentFile), filePath, multiplechoiceQuiz);
+            fetcher(fileExist, loadMC(contentFile, webInteractive), filePath, multiplechoiceQuiz);
             break;
 
         case "Drag Category":
             document.getElementById("duplicate").setAttribute("disabled", true);
             audioFiles = ["drop.mp3"];
-            fetcher(fileExist, loadDC(contentFile), filePath, dragcategoryQuiz);
+            fetcher(fileExist, loadDC(contentFile, webInteractive), filePath, dragcategoryQuiz);
             break;
 
         case "Sound Recorder":
             document.getElementById("addQuiz").setAttribute("disabled", true);
             document.getElementById("duplicate").setAttribute("disabled", true);
-            fetcher(fileExist, loadSR(contentFile), filePath, soundrecorderQuiz);
+            fetcher(fileExist, loadSR(contentFile, webInteractive), filePath, soundrecorderQuiz);
             break;
 
         case "Text Input":
             //document.getElementById("duplicate").setAttribute("disabled", true);
             audioFiles = ["correct.mp3", "prompt.mp3"];
-            fetcher(fileExist, loadTI(contentFile), filePath, textinputQuiz);
+            fetcher(fileExist, loadTI(contentFile, webInteractive), filePath, textinputQuiz);
             break;
         default:
             quizContainer.innerHTML = "Invalid Activity Type!";
@@ -183,6 +179,7 @@ document.addEventListener("click", function(e) {
             let word = text.substring(start, end).toString();
             if (word.trim().length) {
                 text = text.substring(0, start) + "[" + word + "]" + text.substring(end, text.length); //make new sentence
+                text = text.replace(/\&lt;/g, "<").replace(/\&gt;/g, ">");
                 console.log(text);
                 el.innerHTML = text;
                 el.value = el.innerHTML;
@@ -201,6 +198,31 @@ document.addEventListener("click", function(e) {
         }
     }
 
+    if (button.id == "table") {
+        let el = e.target.parentElement.parentElement.previousElementSibling;
+        let text = el.value;
+        // alert(text);
+        if (el.classList.contains("sentence") && !text.includes("<tr>")) {
+            let tr = ""
+            let line = text.includes("<br>") ? text.split("<br>") : text.split("\n");
+            console.log(line)
+            for (let i = 0; i < line.length; i++) {
+                if (line[i] != "") {
+                    let row = line[i].split(":");
+                    let left = row[0].trim()
+                    let right = row[1].trim()
+                    tr += `<tr><td>${left}&nbsp;: </td><td>${right}</td></tr>`
+                }
+            }
+            let table = `<table class="acttable">${tr}</table>`
+                // table = prettifyXml(table)
+            table = table.replace(/\&lt;/g, "<").replace(/\&gt;/g, ">")
+
+            // alert(table)
+            //el.innerHTML = table;
+            el.value = table;
+        }
+    }
     if (button.id == "show_bulk") {
         if (button.parentElement.nextElementSibling.firstElementChild.hasAttribute("style")) {
             button.parentElement.nextElementSibling.firstElementChild.removeAttribute("style");
@@ -300,23 +322,16 @@ document.addEventListener("click", function(e) {
         let opt = button.previousElementSibling.firstElementChild.outerHTML;
         opt = new DOMParser().parseFromString(opt, "text/html");
         console.log(opt.body.innerHTML);
-        opt.querySelector("input[type=radio]") ?
-            opt.querySelector("input[type=radio]").removeAttribute("checked", true) :
-            "";
+        opt.querySelector("input[type=radio]") ? opt.querySelector("input[type=radio]").removeAttribute("checked", true) : "";
 
         let newOpt = opt.querySelectorAll(".option_value"); //get all input/text fileds
         for (let i = 0; i < newOpt.length; i++) {
             newOpt[i].setAttribute("value", ""); //empty input fields
             newOpt[i].innerHTML = ""; //empty text area
         }
-        button.previousElementSibling.insertAdjacentHTML(
-            "beforeend",
-            opt.body.innerHTML
-        );
+        button.previousElementSibling.insertAdjacentHTML("beforeend", opt.body.innerHTML);
         button.previousElementSibling.lastElementChild.classList.add("fadeIn");
-        button.previousElementSibling.lastElementChild
-            .querySelector(".option_value")
-            .focus();
+        button.previousElementSibling.lastElementChild.querySelector(".option_value").focus();
     }
     /////////add quiz////////////
     if (button.id == "addQuiz") {
@@ -343,7 +358,10 @@ document.addEventListener("click", function(e) {
         quizContainer.insertAdjacentHTML("beforeend", _quiz.body.innerHTML);
         quizContainer.lastElementChild.classList.add("fadeIn");
         arrange(".quiz");
-        setTimeout(() => { initQuill(false) }, 200);
+        setTimeout(() => {
+            initQuill(false);
+            quizContainer.scrollTop = quizContainer.scrollHeight;
+        }, 200);
 
     }
     /////////duplicate////////////
@@ -371,7 +389,10 @@ document.addEventListener("click", function(e) {
         quizContainer.lastElementChild.classList.add("fadeIn");
 
         arrange(".quiz");
-        setTimeout(() => { initQuill(false) }, 200);
+        setTimeout(() => {
+            initQuill(false);
+            quizContainer.scrollTop = quizContainer.scrollHeight;
+        }, 200);
     }
 
     if (button.id == "help") {
@@ -416,14 +437,13 @@ function filtered(text, font) {
 
     let response = '',
         _text, converted = [];
-    _text = text = text.replace(/<p>\s+<[\/]?p>/g, '').replace(/<p><br[\/]?><[\/]?p>/g, '').replace(/(&nbsp;|<br>|<br \/>)/gm, '').replace('<p>', '').replace('</p>', '').replace(/\&lt;/g, "<").replace(/\&gt;/g, ">");
+    _text = text.replace(/<p>\s+<[\/]?p>/g, '').replace(/<p><br[\/]?><[\/]?p>/g, '').replace(/(&nbsp;|<br>|<br \/>)/gm, '').replace('<p>', '').replace('</p>', '').replace(/\&lt;/g, "<").replace(/\&gt;/g, ">");
     console.log(font)
 
     _text = _text.split("")
 
     switch (font) {
         case "Ascii":
-            // isGurmukhi(_text) ? response = toAscii(_text) : response = _text;
             _text.map(ln => {
                 ln = ln.replace('।', '[').replace('॥', ']')
 
@@ -436,7 +456,6 @@ function filtered(text, font) {
             });
             break;
         case "Unicode":
-            // !isGurmukhi(_text) ? response = toUnicode(_text) : response = _text;
             _text.map(ln => {
                 ln = ln.replace('[', '।').replace(']', '॥')
 
@@ -452,7 +471,7 @@ function filtered(text, font) {
             break;
     }
 
-    return converted.join("")
+    return converted.join("").replace("੍", "")
 }
 
 function charConverter(line) {
@@ -480,6 +499,7 @@ document.querySelector("#submit").addEventListener("click", function() {
     let actName = filePath.split("\\");
     let name = actName[6] + "/" + actName[7] + "/" + actName[8] + "/" + actName[9];
     layout = layoutType.options[layoutType.selectedIndex].text.trim();
+    accents = accentsType.options[accentsType.selectedIndex].text.trim();
     console.log(layout);
     if (confirm("Update " + name + " ?" + layout)) {
         arrange(".quiz");
@@ -502,11 +522,7 @@ document.querySelector("#submit").addEventListener("click", function() {
                 xmlTemplate = fs.readFileSync(sentenceBuilder, "utf-8");
                 content = updateSB(xmlTemplate);
                 content = prettifyXml(content, { indent: 4 });
-                content = content
-                    .replace(/\>\s+\<!/g, "><!")
-                    .replace(/\]>\s+\</g, "]><")
-                    .replace(/\&lt;/g, "<")
-                    .replace(/\&gt;/g, ">"); //regex to keep CDATA in same line
+                content = content = content.replace(/\&lt;/g, "<").replace(/\&gt;/g, ">").replace(/\>\s+\<!/g, "><!").replace(/\]>\s+\</g, "]><") //regex to keep CDATA in same line
                 console.log(content);
                 break;
 
@@ -562,6 +578,7 @@ document.querySelector("#submit").addEventListener("click", function() {
 
                 content = updateTI(xmlTemplate);
                 content = prettifyXml(content, { indent: 4 });
+                content = content.replace(/\&lt;/g, "<").replace(/\&gt;/g, ">").replace(/\>\s+\<!/g, "><!").replace(/\]>\s+\</g, "]><") //regex to keep CDATA in same line
                 console.log(content);
                 break;
             default:
@@ -575,7 +592,7 @@ document.querySelector("#submit").addEventListener("click", function() {
                 copyFiles(activity);
                 help.length ? fs.writeFileSync(path.join(filePath, "help.html"), help) : "";
             } else {
-                console.log(err);
+                displayMessage(status, `error!!`, 3000);
             }
         });
     }
@@ -668,13 +685,19 @@ function checkUpdates() {
 
 function activityFinder(filePath) {
     // return new Promise(function(resolve, reject) {
-    let Type = "";
+    let Type = "",
+        layout = "",
+        accents = "";
+    // webInteractive = false;
     let contentXML = fs.readFileSync(path.join(filePath, "content.xml"), "utf-8");
     // let xml = new DOMParser().parseFromString(contentXML, "application/xml");
     let $ = cheerio.load(contentXML, { xmlMode: true, decodeEntities: false });
     console.log($.xml());
 
     let fileExist = fs.existsSync(path.join(filePath, "content.xml"));
+
+    $('content').attr('layout') ? layout = $('content').attr('layout').trim() : ""; //find layout for 2022 interactives
+    $('content').attr('accents') ? accents = $('content').attr('accents').trim() : ""; //find accents for 2022 interactives
 
     // if (fileExist) {
     if ($("item[type=target]").length) {
@@ -702,11 +725,13 @@ function activityFinder(filePath) {
         Type = "Sound Recorder";
     }
     console.log(Type);
-    let opt = document.querySelectorAll("option");
+    let opt = document.querySelectorAll("option"); //get all dropdown options
     console.log(opt);
-    type = "sentenceTextInput"
+
     for (let i = 0; i < opt.length; i++) {
         opt[i].innerHTML == Type ? (opt[i].selected = true) : "";
+        opt[i].innerHTML.toLocaleLowerCase() == layout.toLocaleLowerCase() ? (opt[i].selected = true) : "";
+        opt[i].innerHTML.toLocaleLowerCase() == accents.toLocaleLowerCase() ? (opt[i].selected = true) : "";
     }
 
     return Type;
@@ -720,7 +745,7 @@ function fetcher(exist, callFunction, filePath, template) {
                 console.log(resp);
                 helpContent = helper(filePath); //get content from help file if exists
                 initQuill(true)
-                    // document.getElementById('font_ascii').click()
+
             })
             .catch(function(err) {
                 quizContainer.innerHTML = err;
@@ -737,18 +762,20 @@ function fetcher(exist, callFunction, filePath, template) {
 
 function initQuill(status) {
     //status is true on intail load, false when add/duplicate quiz
+    let _toolbar = [
+        ['bold', 'italic', 'underline'],
+        ['link'],
+        [{
+            'color': ['#800000', '#6d26e0']
+        }],
+        ['clean']
+    ]
     if (status) {
-        let clues = quizContainer.querySelectorAll('.clue')
-        for (let index = 0; index < clues.length; index++) {
-            quill[index] = new Quill(clues[index], {
+        let clues = quizContainer.querySelectorAll('.clue');
+        for (let i = 0; i < clues.length; i++) {
+            quillClue[i] = new Quill(clues[i], {
                 modules: {
-                    toolbar: [
-                        ['bold', 'italic', 'underline'],
-                        ['link'],
-                        [{
-                            'color': ['#800000', '#6d26e0']
-                        }]
-                    ]
+                    toolbar: _toolbar
                 },
                 theme: 'bubble'
             });
@@ -757,13 +784,7 @@ function initQuill(status) {
         let last_quiz = quizContainer.lastElementChild;
         new Quill(last_quiz.querySelector('.clue'), {
             modules: {
-                toolbar: [
-                    ['bold', 'italic', 'underline'],
-                    ['link'],
-                    [{
-                        'color': ['#800000', '#6d26e0']
-                    }]
-                ]
+                toolbar: _toolbar
             },
             theme: 'bubble'
         });
@@ -801,6 +822,10 @@ function arrange(classname) {
 }
 
 function copyFiles(act) {
+    let onCorrect_audio = document.getElementById("onCorrect_audio");
+    let clue_audio = document.getElementById("clue_audio");
+    let clue_audioPlayer = document.getElementById("clue_audioPlayer");
+
     let folder = path.join(templateFolder, act);
     let hasFla = fs.readdirSync(filePath).filter((file) => path.extname(file) == ".fla");
     console.log(hasFla);
@@ -811,16 +836,44 @@ function copyFiles(act) {
         let dest = path.join(filePath, file);
         if (path.extname(src) == ".fla") {
             if (hasFla.length < 1) {
-                copy(src, dest).then(function(results) {
-                    console.log("Copied " + results.length + " files");
-                });
+                if (!webInteractive) {
+                    copy(src, dest).then(function(results) {
+                        console.log("Copied " + results.length + " files");
+                    });
+                }
             }
         } else {
             copy(src, dest).then(function(results) {
                 console.log("Copied " + results.length + " files");
-            });
+            }).catch(e => console.log(`${path.basename(dest)} already exists`))
         }
     });
+
+    if (onCorrect_audio.checked || clue_audio.checked || clue_audioPlayer.checked) {
+        let soundLength = "";
+        switch (activity) {
+            case "Select Item":
+            case "Sentence Builder":
+            case "Multiple Choice":
+            case "Drag Category":
+            case "Text Input":
+                soundLength = quizContainer.childElementCount;
+                break;
+            default:
+                soundLength = quizContainer.querySelector('.quiz_options').childElementCount
+
+        }
+        for (let i = 1; i <= soundLength; i++) {
+            let sound = "";
+            parseInt(i) < 10 ? sound = `s00${i}.mp3` : sound = `s0${i}.mp3`;
+
+            let _src = `\\\\vsl-file01\\coursesdev$\\template\\test_sounds\\${sound}`;
+            let _dest = path.join(filePath, sound);
+            copy(_src, _dest)
+                .then((r) => console.log(`${path.basename(_dest)} copied`))
+                .catch(e => console.log(`${path.basename(_dest)} already exists`))
+        }
+    }
 }
 
 function attrRemover() {

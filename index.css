@@ -30,6 +30,7 @@ body {
 #layout option {
     font-size: 20px;
     font-weight: 600;
+    font-family: ;
 }
 
 @keyframes fadeIn {
