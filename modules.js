@@ -163,6 +163,7 @@ function updateSB(XML) {
     layout != "" ? template.querySelector("content").setAttribute('template', activity.toLowerCase().replace(/\s/g, "")) : "";
     accents != "" ? template.querySelector("content").setAttribute('accents', accents.toLowerCase().replace(/\s/g, "")) : "";
 
+   actName[6] == "punjabi" ?template.querySelector("frames").setAttribute("separator","{}"):"";
     template.querySelector("end").insertAdjacentHTML("beforebegin", data);
     content = new XMLSerializer().serializeToString(template);;
     return content;
@@ -257,7 +258,7 @@ function updateSI(XML) {
         clueText = clueText.replace('<p>', '').replace('</p>', '').replace(/<p><br[\/]?><[\/]?p>/g, '').replace(/<p>[\/]?<[\/]?p>/g, '').replace(/(&nbsp;|<br>|<br \/>)/gm, '').replace(/\>\s+\</g, '><'); //remove need <p> tags
 
         let clue = "";
-        clueText.length ? clue = `<action type="setText" tbox="clueTxt"><![CDATA[${clueText}]]></action>` : clue = "";
+        clueText.length ? clue = `<action type="setHTML" tbox="clueTxt"><![CDATA[${clueText}]]></action>` : clue = "";
 
         let randomise = "",
             playAudio = "",

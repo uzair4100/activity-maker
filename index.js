@@ -32,6 +32,7 @@ var filePath,
     accents = "",
     webInteractive = "",
     quiz = "",
+    actName = "",
 
     quillClue = [];
 quillSentence = [];
@@ -77,14 +78,14 @@ modal.style.display = "none";
 checkUpdates();
 //load activity event handler
 document.querySelector("#load").addEventListener("click", function() {
-
+    quizContainer.innerHTML = "";
     help = "";
     filePath = document.querySelector("#filePath").value;
     attrRemover();
-    let actName = filePath.split("\\");
+    actName = filePath.split("\\");
     (actName[5] == "2022" && newInteractiveLanguage.includes(actName[6]) && newInteractiveYear.includes(actName[7])) ? webInteractive = true: webInteractive = false; //check if it's web interactive
     console.log(webInteractive)
-    quizContainer.innerHTML = "";
+    actName[6] != "punjabi" ? document.getElementById('font').style.visibility = 'hidden' : document.getElementById('font').style.visibility = 'visible'; //font is for punjabi only
 
     let fileExist = fs.existsSync(path.join(filePath, "content.xml"));
 
@@ -95,7 +96,6 @@ document.querySelector("#load").addEventListener("click", function() {
     //find template
     switch (activity) {
         case "Select Item":
-            //   audioFiles = ["correct.mp3", "prompt.mp3", "select.mp3", "wrong.mp3"];
             fetcher(fileExist, loadSI(contentFile, webInteractive), filePath, selectitemQuiz);
             break;
 
@@ -106,14 +106,12 @@ document.querySelector("#load").addEventListener("click", function() {
             break;
 
         case "Horizontal Arrange":
-            audioFiles = ["silence.mp3"];
             document.getElementById("addQuiz").setAttribute("disabled", true);
             document.getElementById("duplicate").setAttribute("disabled", true);
             fetcher(fileExist, loadHA(contentFile, webInteractive), filePath, horizontalarrangeQuiz);
             break;
 
         case "Sentence Builder":
-            audioFiles = ["drop.mp3", "prompt.mp3", "tap.mp3", "wrong.mp3"];
             fetcher(fileExist, loadSB(contentFile, webInteractive), filePath, sentencebuilderQuiz);
             break;
 
@@ -124,7 +122,6 @@ document.querySelector("#load").addEventListener("click", function() {
 
         case "Drag Category":
             document.getElementById("duplicate").setAttribute("disabled", true);
-            audioFiles = ["drop.mp3"];
             fetcher(fileExist, loadDC(contentFile, webInteractive), filePath, dragcategoryQuiz);
             break;
 
@@ -135,8 +132,6 @@ document.querySelector("#load").addEventListener("click", function() {
             break;
 
         case "Text Input":
-            //document.getElementById("duplicate").setAttribute("disabled", true);
-            audioFiles = ["correct.mp3", "prompt.mp3"];
             fetcher(fileExist, loadTI(contentFile, webInteractive), filePath, textinputQuiz);
             break;
         default:
@@ -178,7 +173,12 @@ document.addEventListener("click", function(e) {
         if (el.classList.contains("sentence")) {
             let word = text.substring(start, end).toString();
             if (word.trim().length) {
-                text = text.substring(0, start) + "[" + word + "]" + text.substring(end, text.length); //make new sentence
+                let bracketOpen = "",
+                    bracketClose = "";
+                if (actName[6] == "punjabi") {
+                    bracketOpen = "{", bracketClose = "}"; //punjabi has "{}" brackets
+                }
+                text = text.substring(0, start) + bracketOpen + word + bracketClose + text.substring(end, text.length); //make new sentence
                 text = text.replace(/\&lt;/g, "<").replace(/\&gt;/g, ">");
                 console.log(text);
                 el.innerHTML = text;
@@ -238,10 +238,10 @@ document.addEventListener("click", function(e) {
         let bulkText = button.parentElement.previousElementSibling.value; //traverse from button upto textarea
         console.log(bulkText)
         let name = button.closest(".quiz").querySelector(".no").innerHTML;
-        let values = bulkText.split("\n");
+        let values = "";
+        bulkText.includes("*") ? values = bulkText.split("*") : bulkText.split("\n");
         let opt = "";
-        values
-            .filter((val) => typeof val !== undefined && val != "")
+        values.filter((val) => typeof val !== undefined && val != "")
             .map((val, v) => {
                 if (activity == "Sentence Builder") {
                     opt = `<div class="input-group mt-1 option">
@@ -306,7 +306,8 @@ document.addEventListener("click", function(e) {
                 let text = sentence.value;
                 let ans = button.previousElementSibling.getAttribute("value");
                 console.log(ans);
-                let _text = text.replace(`[${ans}]`, ans);
+                let _text = "";
+                actName[6] == "punjabi" ? _text = text.replace(`{${ans}}`, ans) : _text = text.replace(`[${ans}]`, ans); //punjabi has "{}" brackets, not "[]"
                 sentence.value = _text;
                 sentence.innerHTML = sentence.value;
                 removeFadeOut(button.closest(".option"), 300);
