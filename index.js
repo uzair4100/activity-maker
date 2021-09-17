@@ -173,8 +173,8 @@ document.addEventListener("click", function(e) {
         if (el.classList.contains("sentence")) {
             let word = text.substring(start, end).toString();
             if (word.trim().length) {
-                let bracketOpen = "",
-                    bracketClose = "";
+                let bracketOpen = "[",
+                    bracketClose = "]";
                 if (actName[6] == "punjabi") {
                     bracketOpen = "{", bracketClose = "}"; //punjabi has "{}" brackets
                 }
