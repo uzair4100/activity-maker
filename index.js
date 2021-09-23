@@ -13,16 +13,18 @@ const axios = require('axios').default;
 const { toAscii, toUnicode, toEnglish, isGurmukhi } = require('gurmukhi-utils');
 const newInteractiveLanguage = ["french", "german", "indonesian", "japanese", "french"];
 const newInteractiveYear = ["year10"];
+const _audios = ["correct.mp3", "prompt.mp3", "select.mp3", "wrong.mp3", "drop.mp3", "tap.mp3", "silence.mp3", "content.swf"];
 // set Quill to use <b> and <i>, not <strong> and <em> 
 var bold = Quill.import('formats/bold');
 bold.tagName = 'b'; // Quill uses <strong> by default
 Quill.register(bold, true);
 
+
 var italic = Quill.import('formats/italic');
 italic.tagName = 'i'; // Quill uses <em> by default
 Quill.register(italic, true);
-console.log(toAscii('ਬਰਾਬਰ ਸਿੱਖਿਆ'))
-    //variables
+
+//variables
 var filePath,
     optionValue,
     help = "",
@@ -234,22 +236,25 @@ document.addEventListener("click", function(e) {
     }
 
 
-    if (button.id == "bulk_option") {
-        let bulkText = button.parentElement.previousElementSibling.value; //traverse from button upto textarea
+    if (button.parentElement.parentElement.id == "op") {
+        // let bulkText = button.parentElement.previousElementSibling.value; //traverse from button upto textarea
+        let bulkText = button.parentElement.parentElement.parentElement.previousElementSibling.value; //traverse from button upto textarea
         console.log(bulkText)
+        let acts = quizContainer.querySelectorAll(".quiz");
         let name = button.closest(".quiz").querySelector(".no").innerHTML;
         let values = "";
-        bulkText.includes("*") ? values = bulkText.split("*") : bulkText.split("\n");
+        bulkText.includes("\n") ? values = bulkText.split("\n") : "";
+        values = values.filter((val) => typeof val !== undefined && val != ""); //trim array elements
+
         let opt = "";
-        values.filter((val) => typeof val !== undefined && val != "")
-            .map((val, v) => {
-                if (activity == "Sentence Builder") {
-                    opt = `<div class="input-group mt-1 option">
+        values.map((val, v) => {
+            if (activity == "Sentence Builder") {
+                opt = `<div class="input-group mt-1 option">
                         <input type="text" class="form-control option_value"  value="${val}"/>
                         <button class="del">X</button>
                     </div>`;
-                } else {
-                    opt = `<div class="input-group mt-1 option">
+            } else {
+                opt = `<div class="input-group mt-1 option">
                                     <div class="input-group-prepend">
                                         <div class="input-group-text">
                                             <input type="radio" name="${name}" class="option_radio" />
@@ -258,40 +263,63 @@ document.addEventListener("click", function(e) {
                                     <input type="text" class="form-control option_value" value="${val}"/>
                                     <button class="del">X</button>
                                 </div>`;
-                }
+            }
+            //add option in quiz depending on button clicked
+            if (button.classList.contains("separate")) {
+                if (quizContainer.childElementCount == values.length) {
+                    (acts[v]) ? acts[v].querySelector(".quiz_options").insertAdjacentHTML("beforeend", opt): "";
 
+                } else {
+                    alert("There must be " + values.length + " quizes");
+                }
+            } else {
                 button.closest(".quiz").querySelector(".quiz_options").insertAdjacentHTML("beforeend", opt);
-            });
-        button.parentElement.previousElementSibling.value = "";
-        document.getElementById('show_bulk').click();
+            }
+        });
+        button.parentElement.parentElement.parentElement.previousElementSibling.value
+            //document.getElementById('show_bulk').click();
+        button.closest('.makeOptionWrapper').style.display = "none";
     }
 
     if (button.id == "bulk_clue") {
         let bulkText = button.parentElement.previousElementSibling.value; //traverse from button upto textarea
         let acts = quizContainer.querySelectorAll(".quiz");
         let values = bulkText.split("\n");
-        values.filter((val) => typeof val !== undefined && val != "").map((val, v) => {
-            if (acts[v]) {
-                acts[v].querySelector(".ql-editor").innerHTML = val; //it will be added inside ql-editor container
-                acts[v].querySelector(".ql-editor").value = val;
-            }
-        });
-        button.parentElement.previousElementSibling.value = "";
-        document.getElementById('show_bulk').click();
+        values = values.filter((val) => typeof val !== undefined && val != ""); //trim array elements
+
+        if (quizContainer.childElementCount == values.length) {
+            values.map((val, v) => {
+                if (acts[v]) {
+                    acts[v].querySelector(".ql-editor").innerHTML = val; //it will be added inside ql-editor container
+                    acts[v].querySelector(".ql-editor").value = val;
+                }
+            });
+            button.parentElement.previousElementSibling.value = "";
+            //document.getElementById('show_bulk').click();
+            button.closest('.makeOptionWrapper').style.display = "none";
+        } else {
+            alert("There must be " + values.length + " quizes");
+        }
     }
 
     if (button.id == "bulk_sentence") {
         let bulkText = button.parentElement.previousElementSibling.value; //traverse from button upto textarea
         let acts = quizContainer.querySelectorAll(".quiz");
         let values = bulkText.split("\n");
-        values.filter((val) => typeof val !== undefined && val != "").map((val, v) => {
-            if (acts[v]) {
-                acts[v].querySelector("#sentence").innerHTML = val;
-                acts[v].querySelector("#sentence").value = val;
-            }
-        });
-        button.parentElement.previousElementSibling.value = "";
-        document.getElementById('show_bulk').click();
+        values = values.filter((val) => typeof val !== undefined && val != ""); //trim array elements
+        if (quizContainer.childElementCount == values.length) {
+            values.map((val, v) => {
+                if (acts[v]) {
+                    acts[v].querySelector("#sentence").innerHTML = val;
+                    acts[v].querySelector("#sentence").value = val;
+                }
+            });
+            button.parentElement.previousElementSibling.value = "";
+            // document.getElementById('show_bulk').click();
+            button.closest('.makeOptionWrapper').style.display = "none";
+        } else {
+            alert("There must be " + values.length + " quizes");
+        }
     }
 
     if (button.classList.contains("del_quiz")) {
@@ -512,10 +540,12 @@ document.querySelector("#submit").addEventListener("click", function() {
                 content = updateSI(xmlTemplate);
                 content = prettifyXml(content, { indent: 4 });
                 content = content
+                    .replace(/\>\s+\<img/g, '><img')
                     .replace(/\>\s+\<!/g, "><!")
                     .replace(/\]>\s+\</g, "]><")
                     .replace(/\&lt;/g, "<")
                     .replace(/\&gt;/g, ">"); //regex to keep CDATA in same line
+                //.replace(/\>\s+\</g, '><')
                 console.log(content);
                 break;
 
@@ -844,9 +874,11 @@ function copyFiles(act) {
                 }
             }
         } else {
-            copy(src, dest).then(function(results) {
-                console.log("Copied " + results.length + " files");
-            }).catch(e => console.log(`${path.basename(dest)} already exists`))
+            if (!webInteractive) { //we don't need audio files for web interatives
+                copy(src, dest).then(function(results) {
+                    console.log("Copied " + results.length + " files");
+                }).catch(e => console.log(`${path.basename(dest)} already exists`))
+            }
         }
     });
 
@@ -878,9 +910,7 @@ function copyFiles(act) {
 }
 
 function attrRemover() {
-    let checkboxes = document
-        .getElementById("structure")
-        .querySelectorAll("input[type=checkbox]");
+    let checkboxes = document.getElementById("structure").querySelectorAll("input[type=checkbox]");
     checkboxes.forEach((checkbox) => (checkbox.checked = false));
     let btns = document.querySelectorAll("#addQuiz,#duplicate,#help");
     btns.forEach((btn) => btn.removeAttribute("disabled", true));
@@ -941,3 +971,21 @@ function getLanguage(source) {
     });
 
 }
+
+/*/////////////////////////
+var recursive = require("recursive-readdir");
+
+recursive("\\\\vsl-file01\\coursesdev$\\courses\\2022\\french\\year10", function(err, files) {
+    // `files` is an array of file paths
+
+    let filtered = files.filter(file => _audios.includes(path.basename(file)) || path.extname(file) == ".fla")
+    console.log(filtered.length)
+    console.log(filtered)
+    for (let i = 0; i < filtered.length; i++) {
+        const element = filtered[i];
+        //unlinkSync(element)
+      //  console.log(`DELETED: ${element}`)
+
+    }
+});
+//////////////////////////*/

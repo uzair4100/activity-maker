@@ -62,7 +62,8 @@
                         <option value="4">sentencebuilder1</option>
                         <option value="5">sentencebuilder2</option>
                         <option value="6">sentencebuilder3</option>
-                        <option value="7">CUSTOM</option>
+                        <option value="7">selectitem1</option>
+                        <option value="8">CUSTOM</option>
                    </select>
                 </div>
 
@@ -194,21 +195,27 @@
         </div>
         <div id="bar"></div>
     </div>
+
     <div id="templates">
         <div class="w-100 p-0 quiz selectitem">
-            <div class="bg-dark text-white w-100 d-flex justify-content-between px-1 heading">
+            <div class="bg-dark text-white w-100 d-flex justify-content-between align-items-center px-1 heading">
                 <div class="no">1</div>
                 <button id="show_bulk" class="btn btn-outline-warning btn-sm">Show Panel</button>
-                <div class="del_quiz">X</div>
+                <img class="del_quiz" height="22" width="20" src="https://img.icons8.com/wired/20/ffffff/trash.png" data-toggle="tooltip" data-placement="bottom" title="Delete Quiz" />
             </div>
 
             <div class="border border-dark px-5 mb-2 w-100">
                 <div class="my-1 makeOptionWrapper">
-                    <textarea style="width: 50%;float:left;" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control bulk_value" rows="1"></textarea>
-                    <div style="float:right;">
-                        <button class="btn-outline-info btn-sm mb-1" id="bulk_option">Add Options</button>
+                    <textarea style="width: 100%;float:left;" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control bulk_value" rows="1"></textarea>
+                    <div style="float:right;" class="d-flex">
+                        <div style="position: relative;" id="op">
+                            <button class="btn-outline-info btn-sm mb-1 bulk_option" id="bulk_option">Add Options</button>
+                            <ul class="list-option" style="position: absolute;z-index: 10;visibility: hidden;">
+                                <li class="current">Current Quiz</li>
+                                <li class="separate">Spread</li>
+                            </ul>
+                        </div>
                         <button class="btn-outline-secondary btn-sm mb-1" id="bulk_clue">Add Clues</button>
-                        <button class="btn-outline-success btn-sm mb-1" id="bulk_sentence">Add Sentences</button>
                     </div>
                 </div>
 
@@ -233,7 +240,7 @@
                         <button class="del">X</button>
                     </div>
                 </div>
-                <img class="addOption" src="https://img.icons8.com/metro/30/000000/plus.png" />
+                <img class="addOption" src="https://img.icons8.com/metro/25/000000/plus.png" />
             </div>
         </div>
 
@@ -247,10 +254,11 @@
                                 <textarea onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control option_value" rows="1"></textarea>
                             </div>
                             <button class="del">X</button>
+
                         </div>
                     </div>
                 </div>
-                <img class="addOption" src="https://img.icons8.com/metro/30/000000/plus.png" />
+                <img class="addOption" src="https://img.icons8.com/metro/25/000000/plus.png" />
             </div>
         </div>
 
@@ -267,23 +275,29 @@
                         </div>
                     </div>
                 </div>
-                <img class="addOption" src="https://img.icons8.com/metro/30/000000/plus.png" />
+                <img class="addOption" src="https://img.icons8.com/metro/25/000000/plus.png" />
             </div>
 
         </div>
 
         <div class="w-100 p-0 quiz sentencebuilder">
-            <div class="bg-dark text-white w-100 d-flex justify-content-between px-1 heading">
+            <div class="bg-dark text-white w-100 d-flex justify-content-between align-items-center px-1 heading">
                 <div class="no">1</div>
-                <button id="show_bulk" class="btn btn-outline-warning btn-sm">Show Panel</button>
-                <div class="del_quiz">X</div>
+                <button id="show_bulk" class="btn btn-outline-warning btn-sm show_bulk">Show Panel</button>
+                <img class="del_quiz" height="22" width="20" src="https://img.icons8.com/wired/20/ffffff/trash.png" data-toggle="tooltip" data-placement="bottom" title="Delete Quiz" />
             </div>
 
             <div class="border border-dark px-5 mb-2 w-100">
                 <div class="my-1 makeOptionWrapper">
-                    <textarea style="width: 50%;float:left;" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control bulk_value" rows="1"></textarea>
-                    <div style="float:right;">
-                        <button class="btn-outline-info btn-sm mb-1" id="bulk_option">Add Options</button>
+                    <textarea style="width: 100%;float:left;" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control bulk_value" rows="1"></textarea>
+                    <div style="float:right;" class="d-flex">
+                        <div style="position: relative;" id="op">
+                            <button class="btn-outline-info btn-sm mb-1 bulk_option" id="bulk_option">Add Options</button>
+                            <ul class="list-group" style="position: absolute;z-index: 10;visibility: hidden;">
+                                <li class="list-group-item current">Current Quiz</li>
+                                <li class="list-group-item separate">Spread</li>
+                            </ul>
+                        </div>
                         <button class="btn-outline-secondary btn-sm mb-1" id="bulk_clue">Add Clues</button>
                         <button class="btn-outline-success btn-sm mb-1" id="bulk_sentence">Add Sentences</button>
                     </div>
@@ -305,7 +319,7 @@
                         <textarea id="sentence" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control sentence" rows="1"></textarea>
                         <div class="input-group-append d-flex flex-column">
                             <button id="wrap" class="btn-outline-info h-50 ml-1">Wrap</button>
-                            <div class="ml-2" role='button' data-toggle="tooltip" data-placement="bottom" title="Make table"><img id="table" src="https://img.icons8.com/fluency/25/000000/table-1.png" /></div>
+                            <div class="ml-2" role='button' data-toggle="tooltip" data-placement="bottom" title="Make table"><img id="table" src="https://img.icons8.com/fluency/22/000000/table-1.png" /></div>
                         </div>
                     </div>
                 </div>
@@ -317,27 +331,31 @@
                         <button class="del">X</button>
                     </div>
                 </div>
-                <img class="addOption" src="https://img.icons8.com/metro/30/000000/plus.png" />
+                <img class="addOption" src="https://img.icons8.com/metro/25/000000/plus.png" />
             </div>
         </div>
 
         <div class="w-100 p-0 quiz multiplechoice">
-            <div class="bg-dark text-white w-100 d-flex justify-content-between px-1 heading">
+            <div class="bg-dark text-white w-100 d-flex justify-content-between align-items-center px-1 heading">
                 <div class="no">1</div>
                 <button id="show_bulk" class="btn btn-outline-warning btn-sm">Show Panel</button>
-                <div class="del_quiz">X</div>
+                <img class="del_quiz" height="22" width="20" src="https://img.icons8.com/wired/20/ffffff/trash.png" data-toggle="tooltip" data-placement="bottom" title="Delete Quiz" />
             </div>
-
             <div class="border border-dark px-5 mb-2 w-100">
                 <div class="my-1 makeOptionWrapper">
-                    <textarea style="width: 50%;float:left;" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control bulk_value" rows="1"></textarea>
-                    <div style="float:right;">
-                        <button class="btn-outline-info btn-sm mb-1" id="bulk_option">Add Options</button>
+                    <textarea style="width: 100%;float:left;" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control bulk_value" rows="1"></textarea>
+                    <div style="float:right;" class="d-flex">
+                        <div style="position: relative;" id="op">
+                            <button class="btn-outline-info btn-sm mb-1 bulk_option" id="bulk_option">Add Options</button>
+                            <ul class="list-group" style="position: absolute;z-index: 10;visibility: hidden;">
+                                <li class="list-group-item current">Current Quiz</li>
+                                <li class="list-group-item separate">Spread</li>
+                            </ul>
+                        </div>
                         <button class="btn-outline-secondary btn-sm mb-1" id="bulk_clue">Add Clues</button>
                         <button class="btn-outline-success btn-sm mb-1" id="bulk_sentence">Add Sentences</button>
                     </div>
                 </div>
-
                 <div class="input-group m-1">
                     <div class="input-group-prepend">
                         <span class="input-group-text">Clue Text</span>
@@ -358,14 +376,14 @@
                         <button class="del">X</button>
                     </div>
                 </div>
-                <img class="addOption" src="https://img.icons8.com/metro/30/000000/plus.png" />
+                <img class="addOption" src="https://img.icons8.com/metro/25/000000/plus.png" />
             </div>
         </div>
 
         <div class="w-100 p-0 mb-2 border border-dark quiz dragcategory">
-            <div class="bg-dark text-white w-100 d-flex justify-content-between px-1 heading">
+            <div class="bg-dark text-white w-100 d-flex justify-content-between align-items-center px-1 heading">
                 <div class="no">1</div>
-                <div class="del_quiz">X</div>
+                <img class="del_quiz" height="22" width="20" src="https://img.icons8.com/wired/20/ffffff/trash.png" data-toggle="tooltip" data-placement="bottom" title="Delete Quiz" />
             </div>
             <div class="px-5 mb-2 w-100">
                 <div class="w-100 m-0 p-0 quiz_options">
@@ -380,7 +398,7 @@
                         </div>
                     </div>
                 </div>
-                <img class="addOption" src="https://img.icons8.com/metro/30/000000/plus.png" />
+                <img class="addOption" src="https://img.icons8.com/metro/25/000000/plus.png" />
             </div>
         </div>
 
@@ -400,22 +418,22 @@
                         </div>
                     </div>
                 </div>
-                <img class="addOption" src="https://img.icons8.com/metro/30/000000/plus.png" />
+                <img class="addOption" src="https://img.icons8.com/metro/25/000000/plus.png" />
             </div>
 
         </div>
 
         <div class="w-100 p-0 quiz textinput">
-            <div class="bg-dark text-white w-100 d-flex justify-content-between px-1 heading">
+            <div class="bg-dark text-white w-100 d-flex justify-content-between align-items-center px-1 heading">
                 <div class="no">1</div>
                 <button id="show_bulk" class="btn btn-outline-warning btn-sm">Show Panel</button>
-                <div class="del_quiz">X</div>
+                <img class="del_quiz" height="22" width="20" src="https://img.icons8.com/wired/20/ffffff/trash.png" data-toggle="tooltip" data-placement="bottom" title="Delete Quiz" />
             </div>
 
             <div class="border border-dark px-5 mb-2 w-100">
                 <div class="my-1 makeOptionWrapper">
-                    <textarea style="width: 60%;float:left;" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control bulk_value mb-1" rows="1"></textarea>
-                    <div style="float:right;">
+                    <textarea style="width: 100%;float:left;" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control bulk_value mb-1" rows="1"></textarea>
+                    <div style="float:right;" class="d-flex">
                         <button class="btn-outline-secondary btn-sm mb-1" id="bulk_clue">Add Clues</button>
                         <button class="btn-outline-success btn-sm mb-1" id="bulk_sentence">Add Sentences</button>
                     </div>
@@ -436,7 +454,7 @@
                         <textarea id="sentence" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control sentence" rows="1"></textarea>
                         <div class="input-group-append d-flex flex-column">
                             <button id="wrap" class="btn-outline-info h-50 ml-1">Wrap</button>
-                            <div class="ml-2" role='button' data-toggle="tooltip" data-placement="bottom" title="Make table"><img id="table" src="https://img.icons8.com/fluency/25/000000/table-1.png" /></div>
+                            <div class="ml-2" role='button' data-toggle="tooltip" data-placement="bottom" title="Make table"><img id="table" src="https://img.icons8.com/fluency/22/000000/table-1.png" /></div>
                         </div>
                     </div>
                 </div>
@@ -451,6 +469,10 @@
 
     <script type="text/javascript" src="index.js"></script>
     <script type="text/javascript" src="modules.js"></script>
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <!--<script type="text/javascript" src="jquery-ui.min.js"></script>-->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <!-- <table><tr><td>visiter<br>voir<br>parler</td><td>prendre<br>plaire</td><td>passer<br>manger</td><td>admirer<br>comprendre</td><td>acheter<br>faire</td></tr></table> -->

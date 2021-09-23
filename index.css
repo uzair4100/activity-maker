@@ -118,3 +118,28 @@ textarea {
 #content {
     width: 100% !important;
 }
+
+#op:hover ul {
+    visibility: visible !important;
+}
+
+#op ul li:hover {
+    background: lightblue;
+    font-weight: bolder;
+    cursor: pointer;
+}
+
+#op ul {
+    position: absolute;
+    z-index: 10;
+    visibility: hidden;
+    width: max-content;
+    background: snow;
+    border: 1px solid #ccc;
+    padding: initial;
+}
+
+#op ul li {
+    padding: 5px 10px !important;
+    list-style-type: none;
+}
