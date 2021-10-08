@@ -5,7 +5,8 @@ const path = require('path');
 const dialog = electron.dialog;
 const ipcMain = electron.ipcMain;
 const { app, BrowserWindow } = electron
-var mainWindow, helpWindow, position = [];
+var mainWindow, helpWindow = "",
+    position = [];
 const isDev = require('electron-is-dev');
 
 
@@ -38,7 +39,6 @@ app.on('ready', function() {
 
     //receive load file event
     ipcMain.on('chooseFile-dialog', function(event) {
-
         var window = BrowserWindow.fromWebContents(event.sender);
 
         var chooseFileOptions = {
@@ -75,19 +75,22 @@ app.on('ready', function() {
 
     //help window
     ipcMain.on("help-window", function(e, data) {
-        helpWindow = new BrowserWindow(helpWindowOption);
-        helpWindow.loadURL(
-            url.format({
-                pathname: path.join(__dirname, "instructions.html"),
-                protocol: "file",
-                slashes: true
-            })
-        );
+        console.log(helpWindow)
+        if (helpWindow == "") {
+            helpWindow = new BrowserWindow(helpWindowOption);
+            helpWindow.loadURL(
+                url.format({
+                    pathname: path.join(__dirname, "instructions.html"),
+                    protocol: "file",
+                    slashes: true
+                })
+            );
 
-        helpWindow.webContents.once("dom-ready", () => {
-            helpWindow.webContents.send("help-window", data);
-            console.log(data);
-        });
+            helpWindow.webContents.once("dom-ready", () => {
+                helpWindow.webContents.send("help-window", data);
+                console.log(data);
+            });
+        }
     });
 
     //set position of child window relevent to main window
@@ -105,11 +108,13 @@ app.on('ready', function() {
         console.log(data);
         mainWindow.webContents.send("help-data", data);
         helpWindow.close();
+        helpWindow = ""
     });
 
     //close
     ipcMain.on("close", function(e) {
         helpWindow.close();
+        helpWindow = ""
     });
 
 

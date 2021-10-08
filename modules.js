@@ -1,4 +1,5 @@
 const { attr } = require("cheerio/lib/api/attributes");
+const { next } = require("cheerio/lib/api/traversing");
 
 function loadSB(contentXML, webInteractive) {
     return new Promise(function(resolve, reject) {
@@ -12,9 +13,12 @@ function loadSB(contentXML, webInteractive) {
         $("action[type=setImage]").length ? document.querySelector("#clue_image").checked = true : ""; //find clue image
         $("item[btn=Audio]").length || $("item[btn=btn-audio]").length ? document.querySelector("#clue_audio").checked = true : ""; //find audio clues button
         $("item[type=mp3player]").length ? document.querySelector("#clue_audioPlayer").checked = true : ""; //find audio clues mp3 player
+        $("frame").find("action[type=waitTest]").next().next().attr("type") == "playSound" ? document.querySelector("#onCorrect_audio").checked = true : ""; //find play audio on correct
+
         $("item[randomise=yes]").length ? options_random.checked = true : ""; //find if options are randomised
         //getLanguage($("item[type=sentenceButtons]").eq(0).text())
-
+        additionalAttributes = $('frames').attr();
+        console.log(additionalAttributes)
         console.log(webInteractive)
         $("frame:not(:eq(0))").each(function(i) {
             let template = new DOMParser().parseFromString(sentencebuilderQuiz, "text/html");
@@ -27,11 +31,20 @@ function loadSB(contentXML, webInteractive) {
             //webInteractive ? sentence = $(this).find('sentence').text() : sentence = $(this).find("item[type=sentenceButtons]").attr("sentence");
             $(this).find("item[type=sentenceButtons]").attr("sentence") ? sentence = $(this).find("item[type=sentenceButtons]").attr("sentence").trim() : sentence = $(this).find('sentence').text(); // handle old and new template
 
+
+            if (sentence.includes('<span')) {
+                let sss = new DOMParser().parseFromString(sentence, "text/html");
+                sentence = sss.querySelector('span').innerHTML;
+            }
             //set options
             optns.each(function() {
                 let optionTemplate = new DOMParser().parseFromString(template.querySelector(".quiz_options").innerHTML, "text/html");
 
                 let optText = $(this).text().trim();
+                if (optText.includes('<span')) {
+                    let ooo = new DOMParser().parseFromString(optText, "text/html");
+                    optText = ooo.querySelector('span').innerHTML;
+                }
                 console.log(optText)
                 optionTemplate.querySelector(".option_value").setAttribute("value", optText);
                 opt += optionTemplate.body.innerHTML;
@@ -92,17 +105,18 @@ function updateSB(XML) {
             clueImage = "",
             sentenceHandler = "";
 
-        let sentence = quiz.querySelector("#sentence").innerHTML;
-
+        let sentence = quiz.querySelector("#sentence").innerText;
+        // sentence = sentence.replace(/(&nbsp; \/>)/gm, '')
         webInteractive == true ? lineBreaker = "<br>" : lineBreaker = " &#xD;";
         //sentence = sentence.replace(/\&lt;/g, "<").replace(/\&gt;/g, ">");
         sentence.includes("\n") && !sentence.includes("<tr>") ? sentence = sentence.split("\n").join(lineBreaker) : ""; //add line breaks in multi line sentence if it's not table
+        //!sentence.includes("span") && sentence.match(/[\u3400-\u9FBF]/) ? sentence = `<span style="font-family:STkaiti; font-size: 140%">${NBSP}${sentence}</span>` : "";
 
         let clueText = quiz.querySelector(".ql-editor").innerHTML; //fetch text from quill because editor attached with clues field
         clueText = clueText.replace('<p>', '').replace('</p>', '').replace(/<p><br[\/]?><[\/]?p>/g, '').replace(/(&nbsp;|<br>|<br \/>)/gm, '').replace(/\>\s+\</g, '><'); //remove need <p> tags
         parseInt(i + 1) < 10 ? sound = `s00${i+1}` : sound = `s0${i+1}`;
-        document.getElementById("onCorrect_audio").checked == true ? (playAudio = `<action type="delay" secs="0.5"/><action type="playSound" wait="yes" file="${sound}.mp3"></action>`) : playAudio = "";
-        document.getElementById("clue_audio").checked == true ? (clueAudio = `<item type="button" btn="${webInteractive?`btn-audio`:`Audio`}"><action type="playSound" file="${sound}.mp3" wait="no"></action></item><action type="playSound" file="${sound}.mp3" wait="no"></action>`) : "";
+        document.getElementById("onCorrect_audio").checked == true ? (playAudio = `<action type="delay" secs="0.5"/><action type="playSound" wait="yes" file="${sound}.mp3" />`) : playAudio = "";
+        document.getElementById("clue_audio").checked == true ? (clueAudio = `<item type="button" btn="${webInteractive?`btn-audio`:`Audio`}"><action type="playSound" file="${sound}.mp3" wait="no" /></item><action type="playSound" file="${sound}.mp3" wait="no" />`) : "";
         document.getElementById("clue_audioPlayer").checked == true ? clueAudio = `<item type="mp3player" sym="mp3player_1" file="${sound}.mp3"/>` : "";
         document.getElementById("clue_image").checked == true ? (clueImage = `<action type="setImage" img="image-clue" src="image${i+1}.jpg"/>`) : clueImage = "";
         if (require("fs").existsSync(path.join(filePath, `content.xml`))) {
@@ -125,12 +139,15 @@ function updateSB(XML) {
                 (opt_text.includes("*")) ? values = values.concat(opt_text.split("*")): values.push(opt_text);
             }
         }
-        values.filter(val => typeof(val) !== undefined && val != "").map((val, v) => opt += `<option sym="opt_${v}">${val.trim()}</option>`);
+        values.filter(val => typeof(val) !== undefined && val != "").map((val, v) => {
+            opt += `<option sym="opt_${v}">${val.trim()}</option>`;        
+        });
         clueText ? clueLine = `<action type="setHTML" tbox="clueTxt"><![CDATA[${clueText}]]></action>` : clueLine = ""; //add clueline if cluetext exists
-
+      //  !clueText.includes("span") && clueText.match(/[\u3400-\u9FBF]/) ? clueLine = `<action type="setHTML" tbox="clueTxt"><![CDATA[<span style="font-family:STkaiti; font-size: 140%">${clueText.trim()}</span>]]></action>` : "";
+        
         if (webInteractive) {
             sentenceHandler = `${clueImage}<action type="show" sym="clue-spacer"/><item type="sentenceButtons" randomise="${random_value}" sentenceTextBox="sentenceText"  markSym="mark" >
-                                    <sentence><![CDATA[ ${sentence} ]]></sentence>
+                                    <sentence><![CDATA[${NBSP}${sentence.trim()}]]></sentence>
                                     <textbox sym="sentenceText" />
                                     <clearButton sym="btnClear" />
                                     <checkButton sym="btnCheck"/>${opt}
@@ -142,12 +159,13 @@ function updateSB(XML) {
         }
 
         let frameContent = `<frame num="${no}">
-                                <action type="playSound" file="prompt.mp3"></action>
+                                <action type="playSound" file="prompt.mp3" />
                                 <action type="show" sym="btnCheck" />
                                 <action type="show" sym="btnClear" />
                                ${sentenceHandler}
                                 ${clueLine}${clueAudio}
-                                <action type="waitTest"></action>${playAudio}
+                                <action type="waitTest" />${playAudio}
+
                                 <action type="hide" sym="btnCheck" />
                                 <action type="hide" sym="btnClear" />
                                 <action type="delay" secs="1.5"/>
@@ -161,8 +179,13 @@ function updateSB(XML) {
     layout = layoutType.options[layoutType.selectedIndex].text.trim();
     layout != "" ? template.querySelector("content").setAttribute('layout', layout) : "";
     layout != "" ? template.querySelector("content").setAttribute('template', activity.toLowerCase().replace(/\s/g, "")) : "";
-   // accents != "" ? template.querySelector("content").setAttribute('accents', accents.toLowerCase().replace(/\s/g, "")) : "";
-
+    //add additional attributes
+    if(additionalAttributes){
+        for (const [key, value] of Object.entries(additionalAttributes)) {
+            console.log(`${key}: ${value}`);
+            template.querySelector("frames").setAttribute(key, value)
+        }
+    }
    actName[6] == "punjabi" ?template.querySelector("frames").setAttribute("separator","{}"):"";
     template.querySelector("end").insertAdjacentHTML("beforebegin", data);
     content = new XMLSerializer().serializeToString(template);;
@@ -175,32 +198,51 @@ function loadSI(contentXML) {
 
             let fileContent = fs.readFileSync(contentXML, "utf-8");
             let $ = cheerio.load(fileContent, { xmlMode: true, decodeEntities: false });
-            let data = "";
+            let data = "",setText=false;
             // getLanguage($("item[type=choiceFrames]").eq(0).text())
             ////check buttons
             $("action[type=setImage]").length ? document.querySelector("#clue_image").checked = true : ""; //find clue image
             $("item[btn=Audio]").length || $("item[btn=btn-audio]").length ? document.querySelector("#clue_audio").checked = true : ""; //find audio clues button
             $("item[type=mp3player]").length ? document.querySelector("#clue_audioPlayer").checked = true : ""; //find audio clues mp3 player
-            $("action[type=randomiseChoices]").length ? document.querySelector("#options_random").checked = true : ""; //find randomise option
+            $("action[type=randomiseChoices]").length >1? document.querySelector("#options_random").checked = true : ""; //find randomise option
+            $("action[type=useRandomisedChoices]").length ? document.querySelector("#options_randomOnce").checked = true : ""; //find randomiseOnce option
+            //$("item[type=choiceFrames]").text().trim().length == 0 ? document.getElementById("options_image").checked = true : document.getElementById("options_text").checked = true; //find image options
+            $("item[type=choiceFrames]").text().trim().includes("<img") ? document.getElementById("options_image").checked = true : document.getElementById("options_text").checked = true; //find image options
 
-            $('passed').children("action[type=playSound]").attr('file') == "s001.mp3" ? document.querySelector("#onCorrect_audio").checked = true : ""; //find play audio on correct
-            $("item[type=choiceFrames]").text().trim().length == 0 ? document.getElementById("options_image").checked = true : document.getElementById("options_text").checked = true; //find image options
+            $('frame').eq(1).find('passed').children("action[wait=yes]").attr('file') == "s001.mp3" ? document.querySelector("#onCorrect_audio").checked = true : ""; //find play audio on correct
+            if($('frame').last().find("action[tbox=clueTxt]").length >1) {
+                document.querySelector("#onCorrect_settext").checked = true    //find  on correct clue
+                setText=true
+                console.log(setText)
+            } 
 
+            additionalAttributes=$('frames').attr();
+            console.log(additionalAttributes)
+            
             $("frame:not(:eq(0))").each(function(i) {
                 let template = new DOMParser().parseFromString(selectitemQuiz, "text/html");
 
                 let no = i + 1;
-                let clueText = $(this).find("action[tbox=clueTxt]").text();
+                let clueText = "";
+                setText ? clueText=$(this).find('passed').children("action[tbox=clueTxt]").text() : clueText=$(this).children("action[tbox=clueTxt]").text();
                 let optns = $(this).find("item[type=choiceFrames]");
                 console.log(optns)
                 let opt = "";
                 !clueText ? clueText = "" : "";
+                if (clueText.includes('<span')) {
+                    let ccc = new DOMParser().parseFromString(clueText, "text/html");
+                    clueText = ccc.querySelector('span').innerHTML;
+                }
                 //set options
                 optns.each(function() {
                     let optionTemplate = new DOMParser().parseFromString(template.querySelector(".quiz_options").innerHTML, "text/html");
 
                     optText = $(this).text().trim();
                     optText=="" ? optText = $(this).html().trim() : "";
+                    if (optText.includes('<span')) {
+                        let ooo = new DOMParser().parseFromString(optText, "text/html");
+                        optText = ooo.querySelector('span').innerHTML;
+                    }
                     console.log(optText)
                     optionTemplate.querySelector(".option_value").setAttribute("value", optText);
                     optionTemplate.querySelector(".option_radio").setAttribute("name", no);
@@ -253,7 +295,7 @@ function updateSI(XML) {
 
     let data = "",
         content = "",
-        isOptionImage = Boolean;
+        isOptionImage = Boolean,clue_onCorrect=Boolean;
     //loop through quizzes
     for (let i = 0; i < quizzesArray.length; i++) {
         let quiz = quizzesArray[i];
@@ -263,23 +305,28 @@ function updateSI(XML) {
 
         let clue = "";
         clueText.length ? clue = `<action type="setHTML" tbox="clueTxt"><![CDATA[${clueText}]]></action>` : clue = "";
-
+        //for chinese only clue will be in span tag with font
+        //!clueText.includes("span") && clueText.match(/[\u3400-\u9FBF]/) ? clue = `<action type="setHTML" tbox="clueTxt"><![CDATA[<span style="font-family:STkaiti; font-size: 140%">${clueText.trim()}</span>]]></action>` : "";
+        
         let randomise = "",
             playAudio = "",
-            clueAudio = ""
+            clueAudio = "",
         sound = "";
         parseInt(i + 1) < 10 ? sound = `s00${i+1}` : sound = `s0${i+1}`;
         //for webinteractives non random option will have display choices
         document.getElementById("options_random").checked == true ? (randomise = `<action type="randomiseChoices" />`) : webInteractive?randomise = `<action type="displayChoices"/>`:"";
+        document.getElementById("options_randomOnce").checked == true && webInteractive? i==0?randomise = `<action type="randomiseChoices" />`:randomise = `<action type="useRandomisedChoices"/>` : "";
+
         document.getElementById("onCorrect_audio").checked == true ? (playAudio = `<action type="delay" secs="0.5"/><action type="playSound" wait="yes" file="${sound}.mp3"></action>`) : playAudio = "";
         document.getElementById("clue_audio").checked == true ? (clueAudio = `<item type="button" btn="${webInteractive?`btn-audio`:`Audio`}"><action type="playSound" file="${sound}.mp3" wait="no"></action></item><action type="playSound" file="${sound}.mp3" wait="no"></action>`) : clueAudio = "";
         document.getElementById("clue_audioPlayer").checked == true ? clueAudio = `<item type="mp3player" sym="mp3player_1" file="${sound}.mp3"/>` : "";
         document.getElementById("clue_image").checked == true ? (clueImage = `<action type="setImage" img="image-clue" src="image${i+1}.jpg"/>`) : clueImage = "";
+        document.getElementById("onCorrect_settext").checked == true ? clue_onCorrect = true : clue_onCorrect = false;
         if (require("fs").existsSync(path.join(filePath, `content.xml`))) {
             require("fs").existsSync(path.join(filePath, `image${i+1}.jpg`)) ? "" : clueImage = "";   //add image only if image1.jpg exists
         }
-        document.getElementById("options_image").checked == true ? isOptionImage = true : isOptionImage = false;
-
+        //document.getElementById("options_image").checked == true ? isOptionImage = true : isOptionImage = false;
+        //____buttonsize="allframes" _buttonsize="frame" __buttonsize="25%" optionButtonWidth="120px"
         let opt = "",
             values = [];
 
@@ -287,7 +334,6 @@ function updateSI(XML) {
         let options = quiz.querySelectorAll(".option");
         console.log(options)
         let correct = "";
-        if (!isOptionImage) {
             //add all option values in one array
             for (let j = 0; j < options.length; j++) {
 
@@ -304,11 +350,15 @@ function updateSI(XML) {
             values.filter(val => typeof(val) !== undefined && val != "").map((val, v) => {
                 let correctFrame = "";
                 val.trim() == correct.trim() ? correctFrame = ` correctFrame="1"` : "";
-                val.includes('&') ? val = `<![CDATA[${val.trim()}]]>` : ""; //for mostly punjabi font '&' makes xml file invalid
-                opt += `<item type="choiceFrames" sym="opt_${v}"${correctFrame}>${val.trim()}</item>`
+                //val.includes('&') ? val = `<![CDATA[${val.trim()}]]>` : ""; //for mostly punjabi font '&' makes xml file invalid
+               // !val.includes("span") && val.match(/[\u3400-\u9FBF]/) ? val = `${val}` : ""; 
+
+                val = `<![CDATA[${val.trim()}]]>`
+                opt += `<item type="choiceFrames" sym="opt_${v}"${correctFrame}>${val}</item>`
             }); 
-        } else {
+         /*else {
             //for image options xml structure is different
+         //   ____buttonsize="allframes" _buttonsize="frame" __buttonsize="25%" optionButtonWidth="120px"
             for (let j = 0; j < options.length; j++) {
                 let frame = ` frame="${j+1}"`,
                     correctFrame = "";
@@ -317,7 +367,7 @@ function updateSI(XML) {
                // opt += `<item type="choiceFrames" sym="opt_${j}"${frame}${correctFrame}></item>`
                 webInteractive ? opt +=`<item type="choiceFrames" sym="opt_${j}"${correctFrame}>${options[j].querySelector(".option_value").getAttribute("value").trim()}</item>`:opt += `<item type="choiceFrames" sym="opt_${j}"${frame}${correctFrame}></item>`;
             }
-        }
+        }*/
         opt = opt.replace(/\>\s+\</g, '');
         
         console.log(opt)
@@ -325,22 +375,23 @@ function updateSI(XML) {
         let frameContent = `<frame num="${i + 2}">
                         <item type="button" btn="btnCheck" >
                             <action type="validateChoices">
-                            <passed>
+                            <passed> ${clue_onCorrect ? "\n"+clue : ""}
                                 <action type="showChoicesFeedback"/>
+                                <action type="playSound" file="correct.mp3" wait="no" />
                                 <action type="hide" sym="btnCheck" />${playAudio}
                                 <action type="delay" secs="1"/>
-                                <action type="nextFrame"></action>
+                                <action type="nextFrame" />
                             </passed>
                                 <failed>
-                                    <action type="playSound" file="wrong.mp3" wait="no"></action>
+                                    <action type="playSound" file="wrong.mp3" wait="no" />
                                     <action type="showChoicesFeedback"/>
                                 </failed>
                             </action>
                         </item>                       
                         ${opt}${randomise}
-                        ${clue}${clueImage}
-                        ${webInteractive?`<action type="show" sym="clue-spacer"/>`:""}                     
-                        <action type="playSound" file="prompt.mp3" wait="yes"></action>${clueAudio}
+                        ${clue_onCorrect ? `<action type="setHTML" tbox="clueTxt"> </action>` : clue} ${clueImage}
+                        ${webInteractive?`<action type="show" sym="clue-spacer" />`:""}                     
+                        <action type="playSound" file="prompt.mp3" wait="yes" />${clueAudio}
                         <action type="waitTest"></action>
                         <action type="delay" secs="1"/>
                     </frame>${"\n\n"}`;
@@ -354,6 +405,13 @@ function updateSI(XML) {
         layout = layoutType.options[layoutType.selectedIndex].text.trim();
         layout != "" ? template.querySelector("content").setAttribute('layout', layout) : "";
         template.querySelector("content").setAttribute('template', activity.toLowerCase().replace(/\s/g, "")) ;
+    }
+    //if image options add additional attributes
+    if(additionalAttributes){
+        for (const [key, value] of Object.entries(additionalAttributes)) {
+            console.log(`${key}: ${value}`);
+            template.querySelector("frames").setAttribute(key, value)
+        }
     }
     template.querySelector("end").insertAdjacentHTML("beforebegin", data);
 
@@ -888,6 +946,11 @@ function updateDC(XML) {
     //data = data.replace(/\&nbsp;/g, '');
     data = prettifyXml(data, { indent: 4 })
     template.querySelector("activity").innerHTML = name;
+    if(webInteractive){
+        layout = layoutType.options[layoutType.selectedIndex].text.trim();
+        layout != "" ? template.querySelector("content").setAttribute('layout', layout) : "";
+        template.querySelector("content").setAttribute('template', activity.toLowerCase().replace(/\s/g, "")) ;
+    }
     template.querySelector("end").insertAdjacentHTML("beforebegin", data);
     content = new XMLSerializer().serializeToString(template);;
     return content;
@@ -992,18 +1055,19 @@ function loadTI(contentXML) {
         let $ = cheerio.load(fileContent, { xmlMode: true, decodeEntities: false });
         let data = "";
         let clue_image = document.getElementById('clue_image');
-        $('frame').children().last().attr('type') == "delay" ? document.querySelector("#onCorrect_audio").checked = true : ""; //find play audio on correct
+        $("frame").children().last().prev().attr("type")=="playSound" ? document.querySelector("#onCorrect_audio").checked = true : ""; //find play audio on correct
         $("action[type=setImage]").length ? document.querySelector("#clue_image").checked = true : ""; //find audio clues mp3 player
         $("item[btn=Audio]").length || $("item[btn=btn-audio]").length ? document.querySelector("#clue_audio").checked = true : ""; //find audio clues button
         $("item[type=mp3player]").length ? document.querySelector("#clue_audioPlayer").checked = true : ""; //find audio clues mp3 player
         $("action[type=setImage]").length ? clue_image.checked = true : ""; //find image clues
         //getLanguage($("item[type=sentenceButtons]").eq(0).text())
+       
 
         $("frame:not(:eq(0))").each(function(i) {
             let template = new DOMParser().parseFromString(textinputQuiz, "text/html");
             let no = i + 1;
 
-            let clueText = $(this).find("action[tbox=clueTxt]").text().trim(); //text beacuse it may be in CDATA
+            let clueText = $(this).find("action[tbox=clueTxt]").text().trim().replace('<![CDATA[','').replace(']]>',''); //text beacuse it may be in CDATA
             let sentence = "";
             $(this).find('sentence').text() ? sentence = $(this).find('sentence').text() : sentence = $(this).find("item[type=sentenceTextInput]").attr("sentence").trim(); // handle old and new template
 

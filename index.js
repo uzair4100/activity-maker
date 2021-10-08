@@ -1,3 +1,5 @@
+//var modal = document.getElementById("modal");
+//modal.style.display = "none";
 const electron = require("electron");
 const { shell } = electron;
 const ipcRenderer = electron.ipcRenderer;
@@ -11,18 +13,21 @@ const copy = require("recursive-copy");
 const os = require("os");
 const axios = require('axios').default;
 const { toAscii, toUnicode, toEnglish, isGurmukhi } = require('gurmukhi-utils');
-const newInteractiveLanguage = ["french", "german", "indonesian", "japanese", "french"];
-const newInteractiveYear = ["year10"];
+var additionalAttributes = [];
 const _audios = ["correct.mp3", "prompt.mp3", "select.mp3", "wrong.mp3", "drop.mp3", "tap.mp3", "silence.mp3", "content.swf"];
 // set Quill to use <b> and <i>, not <strong> and <em> 
 var bold = Quill.import('formats/bold');
 bold.tagName = 'b'; // Quill uses <strong> by default
 Quill.register(bold, true);
-
-
+const NBSP = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+const interactives = [{ "language": "french", "year": "year10" }, { "language": "german", "year": "year10" }, { "language": "spanish", "year": "year10" }, { "language": "indonesian", "year": "year10" }, { "language": "italian", "year": "year10" }, { "language": "japanese", "year": "year10" }, { "language": "chinese", "year": "year12" }];
 var italic = Quill.import('formats/italic');
 italic.tagName = 'i'; // Quill uses <em> by default
 Quill.register(italic, true);
+
+
+
+
 
 //variables
 var filePath,
@@ -32,7 +37,7 @@ var filePath,
     activity,
     layout = "",
     accents = "",
-    webInteractive = "",
+    webInteractive = true,
     quiz = "",
     actName = "",
 
@@ -73,21 +78,21 @@ status.style.display = "none";
 const dialog = electron.dialog;
 
 var structure = document.querySelector("#structure");
-var modal = document.querySelector("#modal");
+
+
 structure.style.display = "none";
-modal.style.display = "none";
 
 checkUpdates();
 //load activity event handler
 document.querySelector("#load").addEventListener("click", function() {
-    quizContainer.innerHTML = "";
-    help = "";
+    quizContainer.innerHTML = "",
+        help = "";
     filePath = document.querySelector("#filePath").value;
     attrRemover();
     actName = filePath.split("\\");
-    (actName[5] == "2022" && newInteractiveLanguage.includes(actName[6]) && newInteractiveYear.includes(actName[7])) ? webInteractive = true: webInteractive = false; //check if it's web interactive
+    webInteractive = interactives.filter(course => actName[5] == "2022" && course.language == actName[6] && course.year == actName[7]).length > 0;
     console.log(webInteractive)
-    actName[6] != "punjabi" ? document.getElementById('font').style.visibility = 'hidden' : document.getElementById('font').style.visibility = 'visible'; //font is for punjabi only
+        // actName[6] != "punjabi" ? document.getElementById('font').style.visibility = 'hidden' : document.getElementById('font').style.visibility = 'visible'; //font is for punjabi only
 
     let fileExist = fs.existsSync(path.join(filePath, "content.xml"));
 
@@ -144,7 +149,9 @@ document.querySelector("#load").addEventListener("click", function() {
 });
 
 /////////////////////find source path/////////////////////////////////////////
-document.getElementById("chooseFile").addEventListener("click", function() {
+document.getElementById("chooseFile").addEventListener("click", function(e) {
+    e.preventDefault();
+    e.stopPropagation()
     ipcRenderer.send("chooseFile-dialog"); //send choose file event
 
     //receive choosefile event
@@ -269,8 +276,6 @@ document.addEventListener("click", function(e) {
                 if (quizContainer.childElementCount == values.length) {
                     (acts[v]) ? acts[v].querySelector(".quiz_options").insertAdjacentHTML("beforeend", opt): "";
 
-                } else {
-                    alert("There must be " + values.length + " quizes");
                 }
             } else {
                 button.closest(".quiz").querySelector(".quiz_options").insertAdjacentHTML("beforeend", opt);
@@ -553,7 +558,7 @@ document.querySelector("#submit").addEventListener("click", function() {
                 xmlTemplate = fs.readFileSync(sentenceBuilder, "utf-8");
                 content = updateSB(xmlTemplate);
                 content = prettifyXml(content, { indent: 4 });
-                content = content = content.replace(/\&lt;/g, "<").replace(/\&gt;/g, ">").replace(/\>\s+\<!/g, "><!").replace(/\]>\s+\</g, "]><") //regex to keep CDATA in same line
+                content = content = content.replace(/\&lt;/g, "<").replace(/\&gt;/g, ">").replace(/\>\s+\<!/g, "><!").replace(/\]>\s+\</g, "]><").replace(/\>\s+\<span/g, "><span").replace(/span>\s+</g, "span><") //regex to keep CDATA in same line
                 console.log(content);
                 break;
 
@@ -692,6 +697,8 @@ function checkUpdates() {
 
                                 // close the stream
                                 file.end();
+                            }).catch(e => {
+                                existingFile.forEach((file) => fs.unlinkSync(outputdir + "/" + file));
                             })
 
                         }
