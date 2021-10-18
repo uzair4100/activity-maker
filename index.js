@@ -27,8 +27,6 @@ Quill.register(italic, true);
 
 
 
-
-
 //variables
 var filePath,
     optionValue,
@@ -83,6 +81,8 @@ var structure = document.querySelector("#structure");
 structure.style.display = "none";
 
 checkUpdates();
+fillLayouts()
+
 //load activity event handler
 document.querySelector("#load").addEventListener("click", function() {
     quizContainer.innerHTML = "",
@@ -650,6 +650,7 @@ function checkUpdates() {
         let currentVersion = appVersion;
         axios.get(`https://api.github.com/repos/${user}/${repo}/releases/latest`)
             .then((resp) => {
+                document.querySelector("#filePath").value = localStorage.getItem("path") //get path from local storgae
                 let data = resp.data
                 console.log(data)
                 let appName = data.assets[0].name;
@@ -961,7 +962,17 @@ document.querySelector("#clear").addEventListener("click", function() {
 });
 
 
+function fillLayouts() {
+    const layoutSelector = document.getElementById('layout');
+    axios.get('\\\\vsl-file01\\coursesdev$\\template\\layouts.json').then(function(response) {
+        let layouts = response.data;
 
+        layouts.forEach(function(layout) {
+            layoutSelector.insertAdjacentHTML('beforeend', `<option value="13" data-toggle="tooltip" data-placement="bottom" title="${layout.tooltip}">${layout.layoutName}</option>`)
+        })
+    })
+
+}
 
 function getLanguage(source) {
 

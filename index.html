@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Interactives maker 1.0.1</title>
+    <title>Interactives maker 1.0.3</title>
     <link rel="stylesheet" href="index.css" />
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
@@ -56,7 +56,7 @@
                     <div class="h5 mr-3">Layout:</div>
                     <select class="form-select form-select-sm" id="layout">
                         <option selected></option>
-                        <option value="1">textinput1</option>
+                        <!-- <option value="1">textinput1</option>
                         <option value="2">textinput2</option>
                         <option value="3">textinput3</option>
                         <option value="4">sentencebuilder1</option>
@@ -68,7 +68,7 @@
                         <option value="10">selectitem2</option>
                         <option value="11">selectitem20</option>
                         <option value="12">dragcategory1</option>
-                        <option value="13">CUSTOM</option>
+                        <option value="13">CUSTOM</option> -->
                    </select>
                 </div>
 
@@ -130,6 +130,10 @@
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="checkbox" id="options_randomOnce" />
                             <label class="form-check-label" for="options_randomOnce">Randomise Once</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <label class="form-check-label" for="options_gaplength">gaplength:</label>&nbsp;
+                            <input class="form-check-input" value="1" type="number" id="options_gaplength" style="width: 37px !important;" />
                         </div>
                     </div>
                     <!--end options-->

@@ -8,14 +8,15 @@ function loadSB(contentXML, webInteractive) {
         let $ = cheerio.load(fileContent, { xmlMode: true, decodeEntities: false });
         let data = "";
         let options_random = document.getElementById("options_random");
-
         //check buttons
         $("action[type=setImage]").length ? document.querySelector("#clue_image").checked = true : ""; //find clue image
         $("item[btn=Audio]").length || $("item[btn=btn-audio]").length ? document.querySelector("#clue_audio").checked = true : ""; //find audio clues button
         $("item[type=mp3player]").length ? document.querySelector("#clue_audioPlayer").checked = true : ""; //find audio clues mp3 player
         $("frame").find("action[type=waitTest]").next().next().attr("type") == "playSound" ? document.querySelector("#onCorrect_audio").checked = true : ""; //find play audio on correct
-
         $("item[randomise=yes]").length ? options_random.checked = true : ""; //find if options are randomised
+        //alert($("item[sentenceTextBox=sentenceText]").attr('gaplength'))
+        document.getElementById("options_gaplength").value = $("item[type=sentenceButtons]").attr('gaplength'); //get value of gap length and set it
+
         //getLanguage($("item[type=sentenceButtons]").eq(0).text())
         additionalAttributes = $('frames').attr();
         console.log(additionalAttributes)
@@ -83,6 +84,7 @@ function updateSB(XML) {
         textarea[i].innerHTML = textarea[i].value;
     }
     let options_random = document.getElementById("options_random");
+    let options_gaplength = document.getElementById("options_gaplength")
     let template = new DOMParser().parseFromString(XML, "application/xml");
     console.log(template)
 
@@ -146,7 +148,8 @@ function updateSB(XML) {
       //  !clueText.includes("span") && clueText.match(/[\u3400-\u9FBF]/) ? clueLine = `<action type="setHTML" tbox="clueTxt"><![CDATA[<span style="font-family:STkaiti; font-size: 140%">${clueText.trim()}</span>]]></action>` : "";
         
         if (webInteractive) {
-            sentenceHandler = `${clueImage}<action type="show" sym="clue-spacer"/><item type="sentenceButtons" randomise="${random_value}" sentenceTextBox="sentenceText"  markSym="mark" >
+            sentenceHandler = `${clueImage}<action type="show" sym="clue-spacer"/>
+                                <item type="sentenceButtons" randomise="${random_value}" sentenceTextBox="sentenceText"  markSym="mark"  gaplength="${options_gaplength.value}">
                                     <sentence><![CDATA[${NBSP}${sentence.trim()}]]></sentence>
                                     <textbox sym="sentenceText" />
                                     <clearButton sym="btnClear" />
@@ -575,6 +578,7 @@ function updateHA(XML) {
     console.log(template);
     let actName = filePath.split("\\");
     let name = actName[6] + " " + actName[8] + "/" + actName[9];
+
     let quizzes = new DOMParser().parseFromString(quizContainer.innerHTML, "text/html");
     console.log(quizzes)
     let quizzesArray = quizzes.querySelectorAll(".option");
@@ -627,6 +631,8 @@ function loadMC(contentXML) {
             let data = "";
             let onCorrect_settext = document.getElementById("onCorrect_settext");
             $("item[type=setText]").length ? onCorrect_settext.checked = true : ""; // check setText button
+            let options_random = document.getElementById("options_random");
+            $("item[type=radioButtons]").attr("random")=="yes" ? options_random.checked = true : ""; //find if options are randomised
             //getLanguage($("option").eq(0).text())
             //console.log($.xml())
 
@@ -678,6 +684,7 @@ function loadMC(contentXML) {
 
 
 function updateMC(XML) {
+    let options_random = document.getElementById("options_random");
     let onCorrect_settext = document.getElementById("onCorrect_settext");
     //change dom value
     optionValue = quizContainer.querySelectorAll("input[type=text]");
@@ -694,11 +701,11 @@ function updateMC(XML) {
 
     let actName = filePath.split("\\");
     let name = actName[6] + " " + actName[8] + "/" + actName[9];
+    let random_value="yes";
+    options_random.checked ? random_value="yes" : random_value = "no";
     let quizzes = new DOMParser().parseFromString(quizContainer.innerHTML, "text/html")
-
     let quizzesArray = quizzes.querySelectorAll(".multiplechoice");
-    //clueText.includes("span") ? clueText = $($.parseHTML(clueText)).html() : "";
-    //clueText.match(/[\u3400-\u9FBF]/) ? console.log("chinese") : console.log("english")
+    
     let data = "",
         content = "";
     //loop through quizzes
@@ -768,7 +775,7 @@ function updateMC(XML) {
         console.log(setText);
         let frameContent = `<frame id="${i+1}">
                                 <item type="textbox" id="txt2" display="yes"><![CDATA[${clueText.trim()}]]></item>
-                                <item type="radioButtons" random="yes">
+                                <item type="radioButtons" random="${random_value}">
                                     ${opt}
                                 </item>
                                 <item type="checkButton" id="btn0">
