@@ -3,6 +3,7 @@
 const electron = require("electron");
 const { shell } = electron;
 const ipcRenderer = electron.ipcRenderer;
+const { webFrame } = require('electron');
 const path = require("path");
 const http = require("http");
 const https = require("https");
@@ -12,26 +13,28 @@ var prettifyXml = require("prettify-xml");
 const copy = require("recursive-copy");
 const os = require("os");
 const axios = require('axios').default;
-const { toAscii, toUnicode, toEnglish, isGurmukhi } = require('gurmukhi-utils');
+var COURSEDEV = "\\\\vsl-file01\\coursesdev$";
+//const { toAscii, toUnicode, toEnglish, isGurmukhi } = require('gurmukhi-utils');
 var additionalAttributes = [];
 const _audios = ["correct.mp3", "prompt.mp3", "select.mp3", "wrong.mp3", "drop.mp3", "tap.mp3", "silence.mp3", "content.swf"];
 // set Quill to use <b> and <i>, not <strong> and <em> 
 var bold = Quill.import('formats/bold');
 bold.tagName = 'b'; // Quill uses <strong> by default
 Quill.register(bold, true);
-const NBSP = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-const interactives = [{ "language": "french", "year": "year10" }, { "language": "german", "year": "year10" }, { "language": "spanish", "year": "year10" }, { "language": "indonesian", "year": "year10" }, { "language": "italian", "year": "year10" }, { "language": "japanese", "year": "year10" }, { "language": "chinese", "year": "year12" }];
+var NBSP = "";
+var interactives = [{ "language": "french", "year": "year10" }, { "language": "german", "year": "year10" }, { "language": "spanish", "year": "year10" }, { "language": "indonesian", "year": "year10" }, { "language": "italian", "year": "year10" }, { "language": "japanese", "year": "year10" }, { "language": "chinese", "year": "year12" }, { "language": "chineseSLA", "year": "year12" }];
 var italic = Quill.import('formats/italic');
 italic.tagName = 'i'; // Quill uses <em> by default
 Quill.register(italic, true);
+var delay = document.getElementById('options_delay');
 
-
+// Set the zoom factor to 92%
+webFrame.setZoomFactor(0.92);
 
 //variables
-var filePath,
+var filePath = "",
     optionValue,
     help = "",
-    helpContent = "",
     activity,
     layout = "",
     accents = "",
@@ -44,14 +47,14 @@ quillSentence = [];
 var source = path.join(require("os").homedir(), "id01/content.xml");
 
 //xml templates
-var selectItem = "\\\\vsl-file01\\coursesdev$\\template\\Select Item\\selectitem.xml";
-var verticalArrange = "\\\\vsl-file01\\coursesdev$\\template\\Vertical Arrange\\verticalarrange.xml";
-var horizontalArrange = "\\\\vsl-file01\\coursesdev$\\template\\Horizontal Arrange\\horizontalarrange.xml";
-var sentenceBuilder = "\\\\vsl-file01\\coursesdev$\\template\\Sentence Builder\\sentencebuilder.xml";
-var multipleChoice = "\\\\vsl-file01\\coursesdev$\\template\\Multiple Choice\\multiplechoice.xml";
-var dragCategory = "\\\\vsl-file01\\coursesdev$\\template\\Drag Category\\dragcategory.xml";
-var soundrecorder = "\\\\vsl-file01\\coursesdev$\\template\\Sound Recorder\\soundrecorder.xml";
-var textinput = "\\\\vsl-file01\\coursesdev$\\template\\Text Input\\textinput.xml";
+var selectItem = COURSEDEV + "\\template\\Select Item\\selectitem.xml";
+var verticalArrange = COURSEDEV + "\\template\\Vertical Arrange\\verticalarrange.xml";
+var horizontalArrange = COURSEDEV + "\\template\\Horizontal Arrange\\horizontalarrange.xml";
+var sentenceBuilder = COURSEDEV + "\\template\\Sentence Builder\\sentencebuilder.xml";
+var multipleChoice = COURSEDEV + "\\template\\Multiple Choice\\multiplechoice.xml";
+var dragCategory = COURSEDEV + "\\template\\Drag Category\\dragcategory.xml";
+var soundrecorder = COURSEDEV + "\\template\\Sound Recorder\\soundrecorder.xml";
+var textinput = COURSEDEV + "\\template\\Text Input\\textinput.xml";
 
 //html templates
 var selectitemQuiz = document.querySelector(".selectitem").outerHTML;
@@ -79,6 +82,7 @@ var structure = document.querySelector("#structure");
 
 
 structure.style.display = "none";
+document.getElementById("help").setAttribute("disabled", true);
 
 checkUpdates();
 fillLayouts()
@@ -88,11 +92,15 @@ document.querySelector("#load").addEventListener("click", function() {
     quizContainer.innerHTML = "",
         help = "";
     filePath = document.querySelector("#filePath").value;
+    filePath == "" || typeof(filePath) == undefined ? alert("Select activity path") : "";
+
     attrRemover();
     actName = filePath.split("\\");
     webInteractive = interactives.filter(course => actName[5] == "2022" && course.language == actName[6] && course.year == actName[7]).length > 0;
+    webInteractive = true; //all interactives will be in web from 2022
     console.log(webInteractive)
-        // actName[6] != "punjabi" ? document.getElementById('font').style.visibility = 'hidden' : document.getElementById('font').style.visibility = 'visible'; //font is for punjabi only
+
+    // actName[6] != "punjabi" ? document.getElementById('font').style.visibility = 'hidden' : document.getElementById('font').style.visibility = 'visible'; //font is for punjabi only
 
     let fileExist = fs.existsSync(path.join(filePath, "content.xml"));
 
@@ -156,11 +164,15 @@ document.getElementById("chooseFile").addEventListener("click", function(e) {
 
     //receive choosefile event
     ipcRenderer.on("chooseFile-selected", function(err, folder) {
-        console.log(folder.filePaths[0]);
-        document.getElementById("filePath").value = folder.filePaths[0];
-        filePath = document.getElementById("filePath").value;
-        localStorage.setItem("path", filePath);
-        console.log(filePath);
+        //if canceled keep path from local storage , else put new path
+        if (folder.canceled == false) {
+            document.getElementById("filePath").value = folder.filePaths[0];
+            filePath = document.getElementById("filePath").value;
+            localStorage.setItem("path", filePath);
+        } else {
+            document.getElementById("filePath").value = localStorage.getItem("path", filePath);
+            filePath = document.getElementById("filePath").value;
+        }
     });
 }); //end source path
 
@@ -189,9 +201,11 @@ document.addEventListener("click", function(e) {
                 }
                 text = text.substring(0, start) + bracketOpen + word + bracketClose + text.substring(end, text.length); //make new sentence
                 text = text.replace(/\&lt;/g, "<").replace(/\&gt;/g, ">");
+
                 console.log(text);
                 el.innerHTML = text;
-                el.value = el.innerHTML;
+                el.innerText = text;
+                el.value = text;
                 //set option
                 if (activity == "Sentence Builder") {
                     let opt = `<div class="input-group mt-1 option">
@@ -216,12 +230,13 @@ document.addEventListener("click", function(e) {
             let line = text.includes("<br>") ? text.split("<br>") : text.split("\n");
             console.log(line)
             for (let i = 0; i < line.length; i++) {
-                if (line[i] != "") {
-                    let row = line[i].split(":");
-                    let left = row[0].trim()
-                    let right = row[1].trim()
-                    tr += `<tr><td>${left}&nbsp;: </td><td>${right}</td></tr>`
-                }
+
+                let td = "";
+                line[i].split(":").filter(val => typeof(val) !== undefined && val != "").map((val, v) => {
+                    v == 0 ? val = `${val} : ` : ""; //put semicolon back
+                    td += `<td>${val}</td>`
+                })
+                tr += `<tr>${td}</tr>`
             }
             let table = `<table class="acttable">${tr}</table>`
                 // table = prettifyXml(table)
@@ -233,11 +248,11 @@ document.addEventListener("click", function(e) {
         }
     }
     if (button.id == "show_bulk") {
-        if (button.parentElement.nextElementSibling.firstElementChild.hasAttribute("style")) {
-            button.parentElement.nextElementSibling.firstElementChild.removeAttribute("style");
+        if (e.target.closest('.quiz').querySelector('.makeOptionWrapper').hasAttribute("style", "display:none")) {
+            e.target.closest('.quiz').querySelector('.makeOptionWrapper').removeAttribute("style");
             button.innerHTML = "Hide Panel";
         } else {
-            button.parentElement.nextElementSibling.firstElementChild.setAttribute("style", "display:none");
+            e.target.closest('.quiz').querySelector('.makeOptionWrapper').setAttribute("style", "display:none");
             button.innerHTML = "Show Panel";
         }
     }
@@ -252,16 +267,55 @@ document.addEventListener("click", function(e) {
         let values = "";
         bulkText.includes("\n") ? values = bulkText.split("\n") : "";
         values = values.filter((val) => typeof val !== undefined && val != ""); //trim array elements
+        console.log(values)
 
         let opt = "";
         values.map((val, v) => {
-            if (activity == "Sentence Builder") {
-                opt = `<div class="input-group mt-1 option">
+            console.log(val + ",," + v)
+
+            switch (activity) {
+                case "Sentence Builder":
+                    opt = `<div class="input-group mt-1 option">
                         <input type="text" class="form-control option_value"  value="${val}"/>
                         <button class="del">X</button>
                     </div>`;
-            } else {
-                opt = `<div class="input-group mt-1 option">
+                    break;
+                case "Drag Category":
+                    opt = `<div class="input-group my-2 option">
+                                <div class="h6 border border-warning p-1" contenteditable="true" data-toggle="tooltip" data-placement="top" title="If options are decoys, Edit this word to 'Decoys '">Column</div>
+                                <div class="d-flex w-100 h-auto">
+                                    <div class="input-group">
+                                        <textarea onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control option_value" rows="1">${val}</textarea>
+                                    </div>
+                                    <button class="del">X</button>
+                                </div>
+                            </div>`;
+                    break;
+                case "Sound Recorder":
+                    opt = `<div class="input-group my-2 option">
+                                <div class="d-flex w-100">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text"><img src="https://img.icons8.com/ios-filled/30/fa314a/voice-recorder.png"/></span>
+                                        </div>
+                                        <textarea onchange="auto_grow(this)" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control option_value" rows="1">${val}</textarea>
+                                    </div>
+                                    <button class="del">X</button>
+                                </div>
+                            </div>`
+                    break;
+                case "Horizontal Arrange":
+                    opt = `<div class="input-group my-2 option">
+                                    <div class="d-flex w-100">
+                                        <div class="input-group">
+                                            <textarea onchange="auto_grow(this)" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control option_value" rows="1">${val}</textarea>
+                                        </div>
+                                        <button class="del">X</button>
+                                    </div>
+                            </div>`
+                    break;
+                default:
+                    opt = `<div class="input-group mt-1 option">
                                     <div class="input-group-prepend">
                                         <div class="input-group-text">
                                             <input type="radio" name="${name}" class="option_radio" />
@@ -270,20 +324,24 @@ document.addEventListener("click", function(e) {
                                     <input type="text" class="form-control option_value" value="${val}"/>
                                     <button class="del">X</button>
                                 </div>`;
+                    break;
             }
-            //add option in quiz depending on button clicked
+            console.log(opt)
+                //add option in quiz depending on button clicked
             if (button.classList.contains("separate")) {
-                if (quizContainer.childElementCount == values.length) {
+               // if (quizContainer.childElementCount == values.length) {
                     (acts[v]) ? acts[v].querySelector(".quiz_options").insertAdjacentHTML("beforeend", opt): "";
 
-                }
+               // }
             } else {
                 button.closest(".quiz").querySelector(".quiz_options").insertAdjacentHTML("beforeend", opt);
             }
         });
-        button.parentElement.parentElement.parentElement.previousElementSibling.value
-            //document.getElementById('show_bulk').click();
-        button.closest('.makeOptionWrapper').style.display = "none";
+
+        button.parentElement.parentElement.parentElement.previousElementSibling.value = "";
+        e.target.closest('.makeOptionWrapper').style.display = "none";
+        e.target.closest('.quiz').querySelector('.show_bulk').innerHTML = "Show panel";
+        arrange(".quiz");
     }
 
     if (button.id == "bulk_clue") {
@@ -292,7 +350,6 @@ document.addEventListener("click", function(e) {
         let values = bulkText.split("\n");
         values = values.filter((val) => typeof val !== undefined && val != ""); //trim array elements
 
-        if (quizContainer.childElementCount == values.length) {
             values.map((val, v) => {
                 if (acts[v]) {
                     acts[v].querySelector(".ql-editor").innerHTML = val; //it will be added inside ql-editor container
@@ -301,10 +358,10 @@ document.addEventListener("click", function(e) {
             });
             button.parentElement.previousElementSibling.value = "";
             //document.getElementById('show_bulk').click();
-            button.closest('.makeOptionWrapper').style.display = "none";
-        } else {
-            alert("There must be " + values.length + " quizes");
-        }
+            e.target.closest('.makeOptionWrapper').style.display = "none";
+            e.target.closest('.quiz').querySelector('.show_bulk').innerHTML = "Show panel";
+
+        
     }
 
     if (button.id == "bulk_sentence") {
@@ -312,7 +369,6 @@ document.addEventListener("click", function(e) {
         let acts = quizContainer.querySelectorAll(".quiz");
         let values = bulkText.split("\n");
         values = values.filter((val) => typeof val !== undefined && val != ""); //trim array elements
-        if (quizContainer.childElementCount == values.length) {
             values.map((val, v) => {
                 if (acts[v]) {
                     acts[v].querySelector("#sentence").innerHTML = val;
@@ -322,16 +378,16 @@ document.addEventListener("click", function(e) {
             button.parentElement.previousElementSibling.value = "";
             // document.getElementById('show_bulk').click();
             button.closest('.makeOptionWrapper').style.display = "none";
-        } else {
-            alert("There must be " + values.length + " quizes");
-        }
-    }
+            e.target.closest('.quiz').querySelector('.show_bulk').innerHTML = "Show panel";
 
+       
+    }
+    ////////////del quiz/////////
     if (button.classList.contains("del_quiz")) {
         let act = button.parentElement.parentElement;
-        quizContainer.childElementCount > 1 ? removeFadeOut(act, 500) : "";
+        quizContainer.childElementCount > 1 ? removeFadeOut(act, 300) : "";
     }
-
+    ////////////del option/////////
     if (button.classList.contains("del")) {
         if (activity == "Sentence Builder") {
             if (button.closest(".quiz_options").childElementCount > 1) {
@@ -343,12 +399,11 @@ document.addEventListener("click", function(e) {
                 actName[6] == "punjabi" ? _text = text.replace(`{${ans}}`, ans) : _text = text.replace(`[${ans}]`, ans); //punjabi has "{}" brackets, not "[]"
                 sentence.value = _text;
                 sentence.innerHTML = sentence.value;
-                removeFadeOut(button.closest(".option"), 300);
+                removeFadeOut(button.closest(".option"), 200);
             }
         } else {
-            button.closest(".quiz_options").childElementCount > 1 ?
-                removeFadeOut(button.closest(".option"), 300) :
-                "";
+            e.target.closest(".quiz_options").childElementCount > 1 ?
+                removeFadeOut(e.target.closest(".option"), 200) : "";
         }
     }
     ///////add option////////
@@ -395,7 +450,7 @@ document.addEventListener("click", function(e) {
         setTimeout(() => {
             initQuill(false);
             quizContainer.scrollTop = quizContainer.scrollHeight;
-        }, 200);
+        }, 100);
 
     }
     /////////duplicate////////////
@@ -426,11 +481,11 @@ document.addEventListener("click", function(e) {
         setTimeout(() => {
             initQuill(false);
             quizContainer.scrollTop = quizContainer.scrollHeight;
-        }, 200);
+        }, 100);
     }
 
     if (button.id == "help") {
-        ipcRenderer.send("help-window", helpContent); //send event to main window to open modal window
+        ipcRenderer.send("help-window", help); //send event to main window to open modal window
 
         //receive form data
         ipcRenderer.on("help-data", function(e, data) {
@@ -439,94 +494,11 @@ document.addEventListener("click", function(e) {
         });
     }
 
-    if (button.name == "font") {
-        let fontName = button.value; //get user selected font
-        let options = quizContainer.querySelectorAll('.option_value');
-        let clue = quizContainer.querySelectorAll('.clue');
-        let sentence = quizContainer.querySelectorAll('.sentence');
-        let allField = [];
-        allField.push(options, clue, sentence);
 
-        console.log(allField)
-
-        for (let i = 0; i < allField.length; i++) {
-            let element = allField[i];
-            for (let j = 0; j < element.length; j++) {
-                let clueText = '';
-
-                if (element[j].nodeName == 'INPUT' || element[j].nodeName == 'TEXTAREA') {
-                    element[j].value = filtered(element[j].value, fontName)
-
-                } else {
-                    element[j].querySelector(".ql-editor").innerText = filtered(element[j].querySelector(".ql-editor").innerHTML, fontName)
-                }
-            }
-        }
-    }
 
 });
 
-function filtered(text, font) {
-    let special = ["[", "]"];
 
-    let response = '',
-        _text, converted = [];
-    _text = text.replace(/<p>\s+<[\/]?p>/g, '').replace(/<p><br[\/]?><[\/]?p>/g, '').replace(/(&nbsp;|<br>|<br \/>)/gm, '').replace('<p>', '').replace('</p>', '').replace(/\&lt;/g, "<").replace(/\&gt;/g, ">");
-    console.log(font)
-
-    _text = _text.split("")
-
-    switch (font) {
-        case "Ascii":
-            _text.map(ln => {
-                ln = ln.replace('।', '[').replace('॥', ']')
-
-                if (isGurmukhi(ln)) {
-                    converted.push(toAscii(ln))
-                        //!special.includes(ln) ? converted.push(toAscii(ln)) : converted.push(ln);
-                } else {
-                    converted.push(ln);
-                }
-            });
-            break;
-        case "Unicode":
-            _text.map(ln => {
-                ln = ln.replace('[', '।').replace(']', '॥')
-
-                if (!isGurmukhi(ln)) {
-                    converted.push(toUnicode(ln))
-                        //!special.includes(ln) ? converted.push(toUnicode(ln)) : converted.push(ln);
-
-                } else {
-
-                    converted.push(ln);
-                }
-            });
-            break;
-    }
-
-    return converted.join("").replace("੍", "")
-}
-
-function charConverter(line) {
-    line = line.replace(/<p>\s+<[\/]?p>/g, '').replace(/<p><br[\/]?><[\/]?p>/g, '').replace(/(&nbsp;|<br>|<br \/>)/gm, '').replace('<p>', '')
-        .replace('</p>', '').replace(/\&lt;/g, "<")
-        .replace(/\&gt;/g, ">");
-    let special = ["[", "]"]
-    line = line.split("")
-
-    let converted = [];
-    line.map(ln => {
-        //isGurmukhi(ln) || !special.includes(ln) ? converted.push(toAscii(ln)) : converted.push(ln);
-        if (isGurmukhi(ln)) {
-            converted.push(toAscii(ln))
-        } else {
-            converted.push(ln);
-            //  special.includes(ln) ?
-        }
-    })
-    return converted.join("")
-}
 /////////////////////////////////submit//////////////////////////////////////////////////////////
 
 document.querySelector("#submit").addEventListener("click", function() {
@@ -595,7 +567,7 @@ document.querySelector("#submit").addEventListener("click", function() {
 
                 content = updateDC(xmlTemplate);
                 content = prettifyXml(content, { indent: 4 });
-                //  content = content.replace(/>\s+</g, "><"); //regex to keep target element in same line
+                // content=content.replace(/\>\s+\<action/g, "><action");
                 console.log(content);
                 break;
 
@@ -626,7 +598,7 @@ document.querySelector("#submit").addEventListener("click", function() {
             if (!err) {
                 displayMessage(status, `updated ${name}`, 3000);
                 copyFiles(activity);
-                help.length ? fs.writeFileSync(path.join(filePath, "help.html"), help) : "";
+                help ? fs.writeFileSync(path.join(filePath, "help.html"), help) : "";
             } else {
                 displayMessage(status, `error!!`, 3000);
             }
@@ -777,12 +749,14 @@ function activityFinder(filePath) {
 }
 
 function fetcher(exist, callFunction, filePath, template) {
+    filePath != "" || typeof(filePath) != 'undefined' ? document.getElementById("help").removeAttribute("disabled") : "";
+
     if (exist) {
         callFunction
             .then(function(resp) {
                 arrange(".quiz");
                 console.log(resp);
-                helpContent = helper(filePath); //get content from help file if exists
+                help = helper(filePath); //get content from help file if exists
                 initQuill(true)
 
             })
@@ -793,7 +767,7 @@ function fetcher(exist, callFunction, filePath, template) {
             });
     } else {
         quizContainer.innerHTML = template;
-        helpContent = helper(filePath); //get content from help file if exists
+        help = helper(filePath); //get content from help file if exists
         initQuill(true)
     }
 }
@@ -956,24 +930,25 @@ function displayUpdateStatus(modal, msg, duration) {
     }, duration);
 }
 
-//clear app
-document.querySelector("#clear").addEventListener("click", function() {
-    location.reload();
-});
-
-
 function fillLayouts() {
     const layoutSelector = document.getElementById('layout');
     axios.get('\\\\vsl-file01\\coursesdev$\\template\\layouts.json').then(function(response) {
         let layouts = response.data;
 
         layouts.forEach(function(layout) {
-            layoutSelector.insertAdjacentHTML('beforeend', `<option value="13" data-toggle="tooltip" data-placement="bottom" title="${layout.tooltip}">${layout.layoutName}</option>`)
+            layoutSelector.insertAdjacentHTML('beforeend', `<option data-toggle="tooltip" data-placement="bottom" title="${layout.tooltip}">${layout.layoutName}</option>`)
         })
     })
 
 }
 
+//clear app
+document.querySelector("#clear").addEventListener("click", function() {
+    location.reload();
+});
+
+
+/*
 function getLanguage(source) {
 
     detectlanguage.detectCode(source).then(function(result) {
@@ -989,8 +964,6 @@ function getLanguage(source) {
     });
 
 }
-
-/*/////////////////////////
 var recursive = require("recursive-readdir");
 
 recursive("\\\\vsl-file01\\coursesdev$\\courses\\2022\\french\\year10", function(err, files) {
@@ -1007,3 +980,90 @@ recursive("\\\\vsl-file01\\coursesdev$\\courses\\2022\\french\\year10", function
     }
 });
 //////////////////////////*/
+/*
+if (button.name == "font") {
+    let fontName = button.value; //get user selected font
+    let options = quizContainer.querySelectorAll('.option_value');
+    let clue = quizContainer.querySelectorAll('.clue');
+    let sentence = quizContainer.querySelectorAll('.sentence');
+    let allField = [];
+    allField.push(options, clue, sentence);
+
+    console.log(allField)
+
+    for (let i = 0; i < allField.length; i++) {
+        let element = allField[i];
+        for (let j = 0; j < element.length; j++) {
+            let clueText = '';
+
+            if (element[j].nodeName == 'INPUT' || element[j].nodeName == 'TEXTAREA') {
+                element[j].value = filtered(element[j].value, fontName)
+
+            } else {
+                element[j].querySelector(".ql-editor").innerText = filtered(element[j].querySelector(".ql-editor").innerHTML, fontName)
+            }
+        }
+    }
+}
+function filtered(text, font) {
+    let special = ["[", "]"];
+
+    let response = '',
+        _text, converted = [];
+    _text = text.replace(/<p>\s+<[\/]?p>/g, '').replace(/<p><br[\/]?><[\/]?p>/g, '').replace(/(&nbsp;|<br>|<br \/>)/gm, '').replace('<p>', '').replace('</p>', '').replace(/\&lt;/g, "<").replace(/\&gt;/g, ">");
+    console.log(font)
+
+    _text = _text.split("")
+
+    switch (font) {
+        case "Ascii":
+            _text.map(ln => {
+                ln = ln.replace('।', '[').replace('॥', ']')
+
+                if (isGurmukhi(ln)) {
+                    converted.push(toAscii(ln))
+                        //!special.includes(ln) ? converted.push(toAscii(ln)) : converted.push(ln);
+                } else {
+                    converted.push(ln);
+                }
+            });
+            break;
+        case "Unicode":
+            _text.map(ln => {
+                ln = ln.replace('[', '।').replace(']', '॥')
+
+                if (!isGurmukhi(ln)) {
+                    converted.push(toUnicode(ln))
+                        //!special.includes(ln) ? converted.push(toUnicode(ln)) : converted.push(ln);
+
+                } else {
+
+                    converted.push(ln);
+                }
+            });
+            break;
+    }
+
+    return converted.join("").replace("੍", "")
+}
+
+function charConverter(line) {
+    line = line.replace(/<p>\s+<[\/]?p>/g, '').replace(/<p><br[\/]?><[\/]?p>/g, '').replace(/(&nbsp;|<br>|<br \/>)/gm, '').replace('<p>', '')
+        .replace('</p>', '').replace(/\&lt;/g, "<")
+        .replace(/\&gt;/g, ">");
+    let special = ["[", "]"]
+    line = line.split("")
+
+    let converted = [];
+    line.map(ln => {
+        //isGurmukhi(ln) || !special.includes(ln) ? converted.push(toAscii(ln)) : converted.push(ln);
+        if (isGurmukhi(ln)) {
+            converted.push(toAscii(ln))
+        } else {
+            converted.push(ln);
+            //  special.includes(ln) ?
+        }
+    })
+    return converted.join("")
+}
+*/

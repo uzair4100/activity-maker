@@ -1,6 +1,6 @@
 {
     "name": "activity-maker",
-    "version": "1.0.3",
+    "version": "1.0.6",
     "repository": "https://github.com/uzair4100/activity-maker",
     "description": "Make interactives",
     "author": "Uzair",
@@ -18,21 +18,25 @@
     "build": {
         "appId": "com.activity.quickstart",
         "productName": "activity maker",
-        "publish": [{
-            "provider": "github",
-            "owner": "uzair4100",
-            "repo": "activity-maker"
-        }],
+        "publish": [
+            {
+                "provider": "github",
+                "owner": "uzair4100",
+                "repo": "activity-maker"
+            }
+        ],
         "win": {
             "publish": [
                 "github"
             ],
-            "target": [{
-                "target": "nsis",
-                "arch": [
-                    "x64"
-                ]
-            }]
+            "target": [
+                {
+                    "target": "nsis",
+                    "arch": [
+                        "x64"
+                    ]
+                }
+            ]
         }
     },
     "devDependencies": {

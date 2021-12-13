@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Interactives maker 1.0.3</title>
+    <title>Interactives maker 1.0.6</title>
     <link rel="stylesheet" href="index.css" />
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
@@ -28,7 +28,7 @@
                     <div class="input-group-prepend">
                         <button id="chooseFile" class="btn-outline-secondary" type="button">Choose Folder</button>
                     </div>
-                    <input id="filePath" type="text" class="form-control text-bold" placeholder="Path for activity" />
+                    <input id="filePath" type="text" class="form-control text-bold" placeholder="Path for activity" value="" />
                     <div class="input-group-append">
                         <button id="load" class="btn btn-primary" type="button">Load Activity</button>
                     </div>
@@ -52,23 +52,11 @@
                     </select>
                 </div>
 
-                <div class="d-flex justify-content-start align-items-start mb-2">
+                <div class="d-flex justify-content-start align-items-start mb-2" data-toggle="tooltip" data-placement="bottom" title="filled from \\\\vsl-file01\\coursesdev$\\template\\layout.json">
                     <div class="h5 mr-3">Layout:</div>
                     <select class="form-select form-select-sm" id="layout">
                         <option selected></option>
-                        <!-- <option value="1">textinput1</option>
-                        <option value="2">textinput2</option>
-                        <option value="3">textinput3</option>
-                        <option value="4">sentencebuilder1</option>
-                        <option value="5">sentencebuilder2</option>
-                        <option value="6">sentencebuilder3</option>
-                        <option value="7">sentencebuilder4</option>
-                        <option value="8">sentencebuilder20</option>
-                        <option value="9">selectitem1</option>
-                        <option value="10">selectitem2</option>
-                        <option value="11">selectitem20</option>
-                        <option value="12">dragcategory1</option>
-                        <option value="13">CUSTOM</option> -->
+                        <!-- filled from \\\\vsl-file01\\coursesdev$\\template\\layout.json-->
                    </select>
                 </div>
 
@@ -86,9 +74,9 @@
             <!--==================structure======================================-->
             <div id="structure_wrapper" class="d-flex justify-content-center align-items-start">
                 <div class="h4 mr-3">Structure:</div>
-                <div id="structure" class="d-flex justify-content-between flex-column align-items-start border border-dark rounded px-5 py-0 mb-2 w-100">
+                <div id="structure" class="d-flex justify-content-between flex-column align-items-start border border-dark rounded py-1 px-2 mb-2 w-100">
                     <div id="clue" class="d-flex justify-content-between">
-                        <div class="h5 mr-3">Clue</div>
+                        <div class="h5 mr-2">Clue: </div>
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="checkbox" id="clue_text" />
                             <label class="form-check-label" for="clue_text">Text</label>
@@ -109,7 +97,7 @@
                     <!--end clue-->
 
                     <div id="options" class="d-flex justify-content-between">
-                        <div class="h5 mr-3">Options</div>
+                        <div class="h5 mr-2">Options: </div>
 
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="checkbox" id="options_text" />
@@ -132,14 +120,14 @@
                             <label class="form-check-label" for="options_randomOnce">Randomise Once</label>
                         </div>
                         <div class="form-check form-check-inline">
-                            <label class="form-check-label" for="options_gaplength">gaplength:</label>&nbsp;
-                            <input class="form-check-input" value="1" type="number" id="options_gaplength" style="width: 37px !important;" />
+                            <input class="form-check-input" value="3" type="number" id="options_gaplength" style="width: 37px !important;" />
+                            <label class="form-check-label" for="options_gaplength">gaplength</label>&nbsp;
                         </div>
                     </div>
                     <!--end options-->
 
                     <div id="onCorrect" class="d-flex justify-content-between">
-                        <div class="h5 mr-3">On Correct</div>
+                        <div class="h5 mr-2">On Correct: </div>
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="checkbox" id="onCorrect_audio" />
                             <label class="form-check-label" for="onCorrect_audio">Audio</label>
@@ -147,6 +135,10 @@
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="checkbox" id="onCorrect_settext" />
                             <label class="form-check-label" for="onCorrect_settext">Set Text</label>
+                        </div>
+                        <div class="form-check form-check-inline ml-2">
+                            <input class="form-check-input" value="1" type="number" id="options_delay" step="0.5" style="width: 45px !important;" />
+                            <label class="form-check-label" for="options_delay">delay (Secs)</label>&nbsp;
                         </div>
                     </div>
                     <!--end onCorrect-->
@@ -210,16 +202,18 @@
     </div>
 
     <div id="templates">
+
+        <!--=====================================================select item==================================================================================-->
         <div class="w-100 p-0 quiz selectitem">
             <div class="bg-dark text-white w-100 d-flex justify-content-between align-items-center px-1 heading">
                 <div class="no">1</div>
-                <button id="show_bulk" class="btn btn-outline-warning btn-sm">Show Panel</button>
+                <button id="show_bulk" class="btn btn-outline-warning btn-sm show_bulk">Show Panel</button>
                 <img class="del_quiz" height="22" width="20" src="https://img.icons8.com/wired/20/ffffff/trash.png" data-toggle="tooltip" data-placement="bottom" title="Delete Quiz" />
             </div>
 
             <div class="border border-dark px-5 mb-2 w-100">
                 <div class="my-1 makeOptionWrapper">
-                    <textarea style="width: 100%;float:left;" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control bulk_value" rows="1"></textarea>
+                    <textarea style="width: 100%;float:left;" placeholder="Add each clue/sentence option in separate line.." onchange="auto_grow(this)" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control bulk_value" rows="1"></textarea>
                     <div style="float:right;" class="d-flex">
                         <div style="position: relative;" id="op">
                             <button class="btn-outline-info btn-sm mb-1 bulk_option" id="bulk_option">Add Options</button>
@@ -237,7 +231,7 @@
                         <span class="input-group-text">Clue Text</span>
                     </div>
                     <!-- <input id="clueText" type="text" class="form-control clue" value="" /> -->
-                    <div id="clueText" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control clue"></div>
+                    <div id="clueText" onchange="auto_grow(this)" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control clue"></div>
                 </div>
 
                 <div class="h6 mr-3">Options</div>
@@ -257,14 +251,15 @@
             </div>
         </div>
 
+        <!--=====================================================vertical arrange==================================================================================-->
         <div class="w-100 p-0 verticalarrange">
             <div class="px-5 mb-2 w-100">
                 <div class="w-100 m-0 p-0 quiz_options">
                     <div class="input-group my-2 option">
                         <div class="d-flex w-100">
                             <div class="input-group">
-                                <textarea onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control option_value" rows="1"></textarea>
-                                <textarea onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control option_value" rows="1"></textarea>
+                                <textarea onchange="auto_grow(this)" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control option_value" rows="1"></textarea>
+                                <textarea onchange="auto_grow(this)" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control option_value" rows="1"></textarea>
                             </div>
                             <button class="del">X</button>
 
@@ -275,14 +270,29 @@
             </div>
         </div>
 
-        <div class="w-100 p-0 horizontalarrange">
-
+        <div class="w-100 p-0 quiz horizontalarrange">
+            <div class="w-100 bg-dark rounded  d-flex justify-content-between align-items-center px-1 heading">
+                <div class="no" style="visibility: hidden;">1</div>
+                <button id="show_bulk" class="btn btn-outline-warning btn-sm show_bulk">Show Panel</button>
+                <div></div>
+            </div>
+            <div class="my-1 mx-2 makeOptionWrapper">
+                <textarea style="width: 100%;float:left;" placeholder="Add each clue/sentence option in separate line.." onchange="auto_grow(this)" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control bulk_value" rows="1"></textarea>
+                <div style="float:right;margin-right: 40%;" class="d-flex mb-5">
+                    <div style="position: relative;" id="op">
+                        <button class="btn-outline-info btn-sm mb-1 bulk_option" id="bulk_option">Add Sentences</button>
+                        <ul class="list-option" style="position: absolute;z-index: 10;visibility: hidden;">
+                            <li class="current">Current Quiz</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
             <div class="px-5 mb-2 w-100">
                 <div class="w-100 m-0 p-0 quiz_options">
                     <div class="input-group my-2 option">
                         <div class="d-flex w-100">
                             <div class="input-group">
-                                <textarea onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control option_value" rows="1"></textarea>
+                                <textarea onchange="auto_grow(this)" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control option_value" rows="1"></textarea>
                             </div>
                             <button class="del">X</button>
                         </div>
@@ -293,6 +303,7 @@
 
         </div>
 
+        <!--=====================================================Sentence builder==================================================================================-->
         <div class="w-100 p-0 quiz sentencebuilder">
             <div class="bg-dark text-white w-100 d-flex justify-content-between align-items-center px-1 heading">
                 <div class="no">1</div>
@@ -302,7 +313,7 @@
 
             <div class="border border-dark px-5 mb-2 w-100">
                 <div class="my-1 makeOptionWrapper">
-                    <textarea style="width: 100%;float:left;" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control bulk_value" rows="1"></textarea>
+                    <textarea style="width: 100%;float:left;" placeholder="Add each clue/sentence option in separate line.." onchange="auto_grow(this)" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control bulk_value" rows="1"></textarea>
                     <div style="float:right;" class="d-flex">
                         <div style="position: relative;" id="op">
                             <button class="btn-outline-info btn-sm mb-1 bulk_option" id="bulk_option">Add Options</button>
@@ -320,8 +331,8 @@
                     <div class="input-group-prepend">
                         <span class="input-group-text">Clue Text</span>
                     </div>
-                    <div id="clueText" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control clue"></div>
-                    <!-- <textarea id="clueText" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control clue" rows="1"></textarea> -->
+                    <div id="clueText" onchange="auto_grow(this)" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control clue"></div>
+                    <!-- <textarea id="clueText" onchange="auto_grow(this)" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control clue" rows="1"></textarea> -->
                 </div>
 
                 <div class="input-group my-1 d-flex align-items-center justify-content-between">
@@ -329,7 +340,7 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text">Sentence</span>
                         </div>
-                        <textarea id="sentence" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control sentence" rows="1"></textarea>
+                        <textarea id="sentence" onchange="auto_grow(this)" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control sentence" rows="1"></textarea>
                         <div class="input-group-append d-flex flex-column">
                             <button id="wrap" class="btn-outline-info h-50 ml-1">Wrap</button>
                             <div class="ml-2" role='button' data-toggle="tooltip" data-placement="bottom" title="Make table"><img id="table" src="https://img.icons8.com/fluency/22/000000/table-1.png" /></div>
@@ -348,6 +359,7 @@
             </div>
         </div>
 
+        <!--=====================================================Multiple Choice==================================================================================-->
         <div class="w-100 p-0 quiz multiplechoice">
             <div class="bg-dark text-white w-100 d-flex justify-content-between align-items-center px-1 heading">
                 <div class="no">1</div>
@@ -356,7 +368,7 @@
             </div>
             <div class="border border-dark px-5 mb-2 w-100">
                 <div class="my-1 makeOptionWrapper">
-                    <textarea style="width: 100%;float:left;" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control bulk_value" rows="1"></textarea>
+                    <textarea style="width: 100%;float:left;" placeholder="Add each clue/sentence option in separate line.." onchange="auto_grow(this)" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control bulk_value" rows="1"></textarea>
                     <div style="float:right;" class="d-flex">
                         <div style="position: relative;" id="op">
                             <button class="btn-outline-info btn-sm mb-1 bulk_option" id="bulk_option">Add Options</button>
@@ -366,7 +378,6 @@
                             </ul>
                         </div>
                         <button class="btn-outline-secondary btn-sm mb-1" id="bulk_clue">Add Clues</button>
-                        <button class="btn-outline-success btn-sm mb-1" id="bulk_sentence">Add Sentences</button>
                     </div>
                 </div>
                 <div class="input-group m-1">
@@ -374,7 +385,7 @@
                         <span class="input-group-text">Clue Text</span>
                     </div>
                     <!-- <input id="clueText" type="text" class="form-control" value="" /> -->
-                    <div id="clueText" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control clue"></div>
+                    <div id="clueText" onchange="auto_grow(this)" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control clue"></div>
                 </div>
 
                 <div class="h6 mr-3">Options</div>
@@ -393,19 +404,33 @@
             </div>
         </div>
 
+        <!--=====================================================Drag Category==================================================================================-->
         <div class="w-100 p-0 mb-2 border border-dark quiz dragcategory">
             <div class="bg-dark text-white w-100 d-flex justify-content-between align-items-center px-1 heading">
                 <div class="no">1</div>
+                <button id="show_bulk" class="btn btn-outline-warning btn-sm show_bulk">Show Panel</button>
                 <img class="del_quiz" height="22" width="20" src="https://img.icons8.com/wired/20/ffffff/trash.png" data-toggle="tooltip" data-placement="bottom" title="Delete Quiz" />
             </div>
             <div class="px-5 mb-2 w-100">
+                <div class="my-1 makeOptionWrapper">
+                    <textarea style="width: 100%;float:left;" placeholder="Add each clue/sentence option in separate line.." onchange="auto_grow(this)" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control bulk_value" rows="1"></textarea>
+                    <div style="float:right;" class="d-flex">
+                        <div style="position: relative;" id="op">
+                            <button class="btn-outline-info btn-sm mb-1 bulk_option" id="bulk_option">Add Options</button>
+                            <ul class="list-group" style="position: absolute;z-index: 10;visibility: hidden;">
+                                <li class="list-group-item current">Current Quiz</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="w-100 m-0 p-0 quiz_options">
                     <div class="input-group my-2 option">
                         <div class="h6 border border-warning p-1" contenteditable="true" data-toggle="tooltip" data-placement="top" title="If options are decoys, Edit this word to 'Decoys '">Column</div>
                         <div class="d-flex w-100 h-auto">
                             <div class="input-group">
                                 <!--<div class="option_value border p-2 w-100" contenteditable="true"></div>-->
-                                <textarea onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control option_value" rows="1"></textarea>
+                                <textarea onchange="auto_grow(this)" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control option_value" rows="1"></textarea>
                             </div>
                             <button class="del">X</button>
                         </div>
@@ -415,8 +440,25 @@
             </div>
         </div>
 
-        <div class="w-100 p-0 soundrecorder">
-
+        <!--=====================================================Sound Recorder==================================================================================-->
+        <div class="w-100 p-0 quiz soundrecorder">
+            <div class="w-100 bg-dark rounded  d-flex justify-content-between align-items-center px-1 heading">
+                <div class="no" style="visibility: hidden;">1</div>
+                <button id="show_bulk" class="btn btn-outline-warning btn-sm show_bulk">Show Panel</button>
+                <div></div>
+            </div>
+            <div class="my-1 mx-2 makeOptionWrapper">
+                <textarea style="width: 100%;float:left;" placeholder="Add each clue/sentence option in separate line.." onchange="auto_grow(this)" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control bulk_value mb-1" rows="1"></textarea>
+                <div style="float:right;margin-right: 40%;" class="d-flex mb-5">
+                    <div style="position: relative;" id="op">
+                        <button class="btn-outline-info btn-sm mb-1 bulk_option" id="bulk_option">Add Sentences</button>
+                        <ul class="list-option" style="position: absolute;z-index: 10;visibility: hidden;">
+                            <li class="current">Current Quiz</li>
+                            <!-- <li class="separate">Spread</li> -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
             <div class="px-5 mb-2 w-100">
                 <div class="w-100 m-0 p-0 quiz_options">
                     <div class="input-group my-2 option">
@@ -425,7 +467,7 @@
                                 <div class="input-group-prepend">
                                     <span class="input-group-text"><img src="https://img.icons8.com/ios-filled/30/fa314a/voice-recorder.png"/></span>
                                 </div>
-                                <textarea onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control option_value" rows="1"></textarea>
+                                <textarea onchange="auto_grow(this)" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control option_value" rows="1"></textarea>
                             </div>
                             <button class="del">X</button>
                         </div>
@@ -436,6 +478,7 @@
 
         </div>
 
+        <!--=====================================================Text Input==================================================================================-->
         <div class="w-100 p-0 quiz textinput">
             <div class="bg-dark text-white w-100 d-flex justify-content-between align-items-center px-1 heading">
                 <div class="no">1</div>
@@ -445,7 +488,7 @@
 
             <div class="border border-dark px-5 mb-2 w-100">
                 <div class="my-1 makeOptionWrapper">
-                    <textarea style="width: 100%;float:left;" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control bulk_value mb-1" rows="1"></textarea>
+                    <textarea style="width: 100%;float:left;" placeholder="Add each clue/sentence/option in separate line.." onchange="auto_grow(this)" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control bulk_value mb-1" rows="1"></textarea>
                     <div style="float:right;" class="d-flex">
                         <button class="btn-outline-secondary btn-sm mb-1" id="bulk_clue">Add Clues</button>
                         <button class="btn-outline-success btn-sm mb-1" id="bulk_sentence">Add Sentences</button>
@@ -456,7 +499,7 @@
                     <div class="input-group-prepend">
                         <span class="input-group-text">Clue Text</span>
                     </div>
-                    <div id="clueText" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control clue"></div>
+                    <div id="clueText" onchange="auto_grow(this)" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control clue"></div>
                 </div>
 
                 <div class="input-group my-1 d-flex align-items-center justify-content-between">
@@ -464,7 +507,7 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text">Sentence</span>
                         </div>
-                        <textarea id="sentence" onchange="auto_grow(this)" oninput="auto_grow(this)" onmouseover="auto_grow(this)" class="form-control sentence" rows="1"></textarea>
+                        <textarea id="sentence" onchange="auto_grow(this)" oninput="auto_grow(this)" onfocus="auto_grow(this)" class="form-control sentence" rows="1"></textarea>
                         <div class="input-group-append d-flex flex-column">
                             <button id="wrap" class="btn-outline-info h-50 ml-1">Wrap</button>
                             <div class="ml-2" role='button' data-toggle="tooltip" data-placement="bottom" title="Make table"><img id="table" src="https://img.icons8.com/fluency/22/000000/table-1.png" /></div>
@@ -475,7 +518,6 @@
         </div>
     </div>
     <!--end twmplate-->
-
 
     <!--==============================================END TEMPLATES====================================================================-->
     <!--==================================================================================================================-->

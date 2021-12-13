@@ -1,5 +1,5 @@
 const { attr } = require("cheerio/lib/api/attributes");
-const { next } = require("cheerio/lib/api/traversing");
+const { next, children } = require("cheerio/lib/api/traversing");
 
 function loadSB(contentXML, webInteractive) {
     return new Promise(function(resolve, reject) {
@@ -14,7 +14,7 @@ function loadSB(contentXML, webInteractive) {
         $("item[type=mp3player]").length ? document.querySelector("#clue_audioPlayer").checked = true : ""; //find audio clues mp3 player
         $("frame").find("action[type=waitTest]").next().next().attr("type") == "playSound" ? document.querySelector("#onCorrect_audio").checked = true : ""; //find play audio on correct
         $("item[randomise=yes]").length ? options_random.checked = true : ""; //find if options are randomised
-        //alert($("item[sentenceTextBox=sentenceText]").attr('gaplength'))
+        delay.value = $("action[type=delay]").attr("secs"); //set value of delay
         document.getElementById("options_gaplength").value = $("item[type=sentenceButtons]").attr('gaplength'); //get value of gap length and set it
 
         //getLanguage($("item[type=sentenceButtons]").eq(0).text())
@@ -87,15 +87,14 @@ function updateSB(XML) {
     let options_gaplength = document.getElementById("options_gaplength")
     let template = new DOMParser().parseFromString(XML, "application/xml");
     console.log(template)
-
     let actName = filePath.split("\\");
     let name = actName[6] + " " + actName[8] + "/" + actName[9];
     let quizzes = new DOMParser().parseFromString(quizContainer.innerHTML, "text/html")
     let quizzesArray = quizzes.querySelectorAll(".sentencebuilder");
+    actName[6] && actName[6].toString().includes("chinese") && layout === "sentencebuilder21" ? NBSP = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" : NBSP = ""; //set indent if it's chinese long sentence
 
     let data = "",
         content = "",
-        layout = "",
         random_value,
         lineBreaker = "";
     options_random.checked ? random_value = "yes" : random_value = "no";
@@ -107,7 +106,7 @@ function updateSB(XML) {
             clueImage = "",
             sentenceHandler = "";
 
-        let sentence = quiz.querySelector("#sentence").innerText;
+        let sentence = quiz.querySelector("#sentence").value;
         // sentence = sentence.replace(/(&nbsp; \/>)/gm, '')
         webInteractive == true ? lineBreaker = "<br>" : lineBreaker = " &#xD;";
         //sentence = sentence.replace(/\&lt;/g, "<").replace(/\&gt;/g, ">");
@@ -115,7 +114,7 @@ function updateSB(XML) {
         //!sentence.includes("span") && sentence.match(/[\u3400-\u9FBF]/) ? sentence = `<span style="font-family:STkaiti; font-size: 140%">${NBSP}${sentence}</span>` : "";
 
         let clueText = quiz.querySelector(".ql-editor").innerHTML; //fetch text from quill because editor attached with clues field
-        clueText = clueText.replace('<p>', '').replace('</p>', '').replace(/<p><br[\/]?><[\/]?p>/g, '').replace(/(&nbsp;|<br>|<br \/>)/gm, '').replace(/\>\s+\</g, '><'); //remove need <p> tags
+        clueText = clueText.replace('<p>', '').replace('</p>', '').replace(/<p><br[\/]?><[\/]?p>/g, '').replace(/(&nbsp;|<br>|<br \/>)/gm, '').replace(/\>\s+\</g, '><').replace(`${i+1}.`, ''); //remove need <p> tags and numbering
         parseInt(i + 1) < 10 ? sound = `s00${i+1}` : sound = `s0${i+1}`;
         document.getElementById("onCorrect_audio").checked == true ? (playAudio = `<action type="delay" secs="0.5"/><action type="playSound" wait="yes" file="${sound}.mp3" />`) : playAudio = "";
         document.getElementById("clue_audio").checked == true ? (clueAudio = `<item type="button" btn="${webInteractive?`btn-audio`:`Audio`}"><action type="playSound" file="${sound}.mp3" wait="no" /></item><action type="playSound" file="${sound}.mp3" wait="no" />`) : "";
@@ -171,7 +170,7 @@ function updateSB(XML) {
 
                                 <action type="hide" sym="btnCheck" />
                                 <action type="hide" sym="btnClear" />
-                                <action type="delay" secs="1.5"/>
+                                <action type="delay" secs="${delay.value}"/>
                             </frame>${"\n\n"}`;
         console.log(frameContent)
         data += frameContent;
@@ -179,7 +178,7 @@ function updateSB(XML) {
     console.log(data)
     data = prettifyXml(data, { indent: 4 })
     template.querySelector("activity").innerHTML = name;
-    layout = layoutType.options[layoutType.selectedIndex].text.trim();
+    
     layout != "" ? template.querySelector("content").setAttribute('layout', layout) : "";
     layout != "" ? template.querySelector("content").setAttribute('template', activity.toLowerCase().replace(/\s/g, "")) : "";
     //add additional attributes
@@ -209,9 +208,9 @@ function loadSI(contentXML) {
             $("item[type=mp3player]").length ? document.querySelector("#clue_audioPlayer").checked = true : ""; //find audio clues mp3 player
             $("action[type=randomiseChoices]").length >1? document.querySelector("#options_random").checked = true : ""; //find randomise option
             $("action[type=useRandomisedChoices]").length ? document.querySelector("#options_randomOnce").checked = true : ""; //find randomiseOnce option
-            //$("item[type=choiceFrames]").text().trim().length == 0 ? document.getElementById("options_image").checked = true : document.getElementById("options_text").checked = true; //find image options
-            $("item[type=choiceFrames]").text().trim().includes("<img") ? document.getElementById("options_image").checked = true : document.getElementById("options_text").checked = true; //find image options
-
+            delay.value = $("action[type=delay]").attr("secs"); //set value of delay
+            $("item[type=choiceFrames]").text().trim().includes("<img") && !$("item[type=choiceFrames]").text().trim().includes("audio") ? document.getElementById("options_image").checked = true : ""; //find image options
+            $("item[type=choiceFrames]").attr('audio') ? document.getElementById("options_audio").checked =true:""; //find audio options
             $('frame').eq(1).find('passed').children("action[wait=yes]").attr('file') == "s001.mp3" ? document.querySelector("#onCorrect_audio").checked = true : ""; //find play audio on correct
             if($('frame').last().find("action[tbox=clueTxt]").length >1) {
                 document.querySelector("#onCorrect_settext").checked = true    //find  on correct clue
@@ -304,7 +303,7 @@ function updateSI(XML) {
         let quiz = quizzesArray[i];
         //let clueText = quiz.querySelector("#clueText").getAttribute("value").trim();
         let clueText = quiz.querySelector(".ql-editor").innerHTML;
-        clueText = clueText.replace('<p>', '').replace('</p>', '').replace(/<p><br[\/]?><[\/]?p>/g, '').replace(/<p>[\/]?<[\/]?p>/g, '').replace(/(&nbsp;|<br>|<br \/>)/gm, '').replace(/\>\s+\</g, '><'); //remove need <p> tags
+        clueText = clueText.replace('<p>', '').replace('</p>', '').replace(/<p><br[\/]?><[\/]?p>/g, '').replace(/<p>[\/]?<[\/]?p>/g, '').replace(/(&nbsp;|<br>|<br \/>)/gm, '').replace(/\>\s+\</g, '><').replace(`${i+1}.`,''); //remove need <p> tags and numbering
 
         let clue = "";
         clueText.length ? clue = `<action type="setHTML" tbox="clueTxt"><![CDATA[${clueText}]]></action>` : clue = "";
@@ -314,6 +313,7 @@ function updateSI(XML) {
         let randomise = "",
             playAudio = "",
             clueAudio = "",
+            optionAudio="",
         sound = "";
         parseInt(i + 1) < 10 ? sound = `s00${i+1}` : sound = `s0${i+1}`;
         //for webinteractives non random option will have display choices
@@ -353,24 +353,15 @@ function updateSI(XML) {
             values.filter(val => typeof(val) !== undefined && val != "").map((val, v) => {
                 let correctFrame = "";
                 val.trim() == correct.trim() ? correctFrame = ` correctFrame="1"` : "";
-                //val.includes('&') ? val = `<![CDATA[${val.trim()}]]>` : ""; //for mostly punjabi font '&' makes xml file invalid
-               // !val.includes("span") && val.match(/[\u3400-\u9FBF]/) ? val = `${val}` : ""; 
+                
+               let _sound="";
+               parseInt(v + 1) < 10 ? _sound = `a00${v+1}` : _sound = `a0${v+1}`;
+                document.getElementById('options_audio').checked ? optionAudio= ` audio="${_sound}.mp3"` :"" ;
 
                 val = `<![CDATA[${val.trim()}]]>`
-                opt += `<item type="choiceFrames" sym="opt_${v}"${correctFrame}>${val}</item>`
+                opt += `<item type="choiceFrames" sym="opt_${v}"${optionAudio}${correctFrame}>${val}</item>`
             }); 
-         /*else {
-            //for image options xml structure is different
-         //   ____buttonsize="allframes" _buttonsize="frame" __buttonsize="25%" optionButtonWidth="120px"
-            for (let j = 0; j < options.length; j++) {
-                let frame = ` frame="${j+1}"`,
-                    correctFrame = "";
-                let opt_radio = options[j].querySelector(".option_radio");
-                opt_radio.hasAttribute("checked") ? correctFrame = ` correctFrame ="1"` : correctFrame = ``;
-               // opt += `<item type="choiceFrames" sym="opt_${j}"${frame}${correctFrame}></item>`
-                webInteractive ? opt +=`<item type="choiceFrames" sym="opt_${j}"${correctFrame}>${options[j].querySelector(".option_value").getAttribute("value").trim()}</item>`:opt += `<item type="choiceFrames" sym="opt_${j}"${frame}${correctFrame}></item>`;
-            }
-        }*/
+        
         opt = opt.replace(/\>\s+\</g, '');
         
         console.log(opt)
@@ -380,9 +371,9 @@ function updateSI(XML) {
                             <action type="validateChoices">
                             <passed> ${clue_onCorrect ? "\n"+clue : ""}
                                 <action type="showChoicesFeedback"/>
-                                <action type="playSound" file="correct.mp3" wait="no" />
-                                <action type="hide" sym="btnCheck" />${playAudio}
+                                <action type="playSound" file="correct.mp3" wait="yes" />
                                 <action type="delay" secs="1"/>
+                                <action type="hide" sym="btnCheck" />${playAudio}
                                 <action type="nextFrame" />
                             </passed>
                                 <failed>
@@ -392,11 +383,11 @@ function updateSI(XML) {
                             </action>
                         </item>                       
                         ${opt}${randomise}
-                        ${clue_onCorrect ? `<action type="setHTML" tbox="clueTxt"> </action>` : clue} ${clueImage}
+                        ${clue_onCorrect ? `<action type="setHTML" tbox="clueTxt"><![CDATA[&nbsp;]]> </action>` : clue} ${clueImage}
                         ${webInteractive?`<action type="show" sym="clue-spacer" />`:""}                     
                         <action type="playSound" file="prompt.mp3" wait="yes" />${clueAudio}
                         <action type="waitTest"></action>
-                        <action type="delay" secs="1"/>
+                        <action type="delay" secs="${delay.value}"/>
                     </frame>${"\n\n"}`;
 
         data += frameContent;
@@ -633,8 +624,8 @@ function loadMC(contentXML) {
             $("item[type=setText]").length ? onCorrect_settext.checked = true : ""; // check setText button
             let options_random = document.getElementById("options_random");
             $("item[type=radioButtons]").attr("random")=="yes" ? options_random.checked = true : ""; //find if options are randomised
-            //getLanguage($("option").eq(0).text())
-            //console.log($.xml())
+            delay.value = $("item[type=delay]").attr("secs"); //set value of delay
+
 
             $("frame").each(function(i) {
                 let template = new DOMParser().parseFromString(multiplechoiceQuiz, "text/html");
@@ -770,6 +761,7 @@ function updateMC(XML) {
         } else {
             setTextLine = "";
         }
+        clueText=clueText.replace(`${i+1}.`,''); //reove numbering from cluetext
 
         !clueText.includes("span") && clueText.match(/[\u3400-\u9FBF]/) ? clueText = `<span style="font-family:STkaiti; font-size: 140%">${clueText.trim()}</span>` : "";
         console.log(setText);
@@ -781,7 +773,7 @@ function updateMC(XML) {
                                 <item type="checkButton" id="btn0">
                                     <item type="checkRadioButtons">
                                         <correct>
-                                            ${setTextLine}<item type="delay" secs="2"/>
+                                            ${setTextLine}<item type="delay" secs="${delay.value}"/>
                                             <item type="nextFrame"/>
                                         </correct>
                                         <wrong></wrong>
@@ -807,7 +799,10 @@ function loadDC(contentXML) {
             let $ = cheerio.load(fileContent, { xmlMode: true, decodeEntities: false });
             let data = "";
 
-            //    !$("item[type=target]").length ? reject("Invalid Activity Type") : ""; //reject if not drag category
+            $("item[type=button]").children("[type=playSound]").length ? document.getElementById("clue_audio").checked=true:"";  //find audio 
+            $("item[type=mp3player]").length ? document.querySelector("#clue_audioPlayer").checked = true : ""; //find audio clues mp3 player
+
+            delay.value = $("action[type=delay]").attr("secs"); //set value of delay
 
             $("frame:not(:eq(0))").each(function(i) {
 
@@ -888,9 +883,20 @@ function updateDC(XML) {
     let name = actName[6] + " " + actName[8] + "/" + actName[9];
     let quizzes = new DOMParser().parseFromString(quizContainer.innerHTML, "text/html")
     let quizzesArray = quizzes.querySelectorAll(".dragcategory");
-
+    let clue_audio = document.getElementById("clue_audio");
+    let clue_audioPlayer = document.getElementById("clue_audioPlayer");
+    //find maximum drops
+    let maxDrops=document.querySelectorAll('.option');
+    let no_of_drops=1;
+    for (let m = 0; m < maxDrops.length; m++) {
+        if(maxDrops[m].firstElementChild.innerHTML == "Column"){
+            let dropLength= maxDrops[m].querySelector('.option_value').value.split("\n").filter(val => typeof(val) !== undefined && val != "").length;
+            dropLength > no_of_drops ? no_of_drops = dropLength : "";
+        }
+    }
+     //console.log(no_of_drops)
     let data = "",
-        content = "";
+        content = "",sound="",audioClueLine="";
     //loop through quizzes
     for (let i = 0; i < quizzesArray.length; i++) {
         let no = i + 2;
@@ -905,7 +911,13 @@ function updateDC(XML) {
         console.log(options)
         let dragCount = 0;
         //add all option values in one array
+
+        parseInt(i + 1) < 10 ? sound = `s00${i+1}.mp3` : sound = `s0${i+1}.mp3`; //handle 009 or 010
+        clue_audio.checked ? audioClueLine+=`<item type="button" btn="audio-button-${i+1}"><action type="playSound" file="${sound}"/></item>`:"";
+        clue_audioPlayer.checked ? audioClueLine =`<item type="mp3player" sym="mp3player_1" file="${sound}"/>`:"";
+
         for (let j = 0; j < options.length; j++) {
+           
             let isDecoy = false;
             options[j].querySelector('.h6').innerHTML.toLocaleLowerCase().includes("decoy") ? isDecoy = true : ""; //find if it has decoy column then dont push target names
             let targetNames = []
@@ -923,8 +935,9 @@ function updateDC(XML) {
                     dragCount++;
                 });
                 if (targetNames.length) {
+                   // let maxDrops= targetNames.length;
                     targetNames = targetNames.join("|").toString();
-                    targets.push(`<item type="target" sym="tg${targets.length}" names="${targetNames}"/>`);
+                    targets.push(`<item type="target" sym="tg${targets.length}" names="${targetNames}" maxdrops="${no_of_drops}" />`);
                 }
                 targetNames = [];
             }
@@ -937,15 +950,16 @@ function updateDC(XML) {
         let frameContent = `<frame num="${no}">
                                 ${opt}${"\n\n"}
                                 ${targets.join("").toString()}
+                                ${"\n" + audioClueLine + "\n"}
                                 <item type="button" btn="btnCheck" visible="no">
                                     <action type="validateDragItems" mark="mark" lockCorrect="yes"/>
                                 </item>
                                 <action type="randomiseGroup" group="group0"/>
                                 <action type="showDragGroup" group="group0"/>
                                 <action type="show" sym="btnCheck"/>
-                                <action type="waitTest"></action>
+                                <action type="waitTest" />
                                 <action type="hide" sym="btnCheck"/>
-                                <action type="delay" secs="2"/>
+                                <action type="delay" secs="${delay.value}"/>
                             </frame>${"\n\n"}`;
 
         data += frameContent;
@@ -1067,6 +1081,8 @@ function loadTI(contentXML) {
         $("item[btn=Audio]").length || $("item[btn=btn-audio]").length ? document.querySelector("#clue_audio").checked = true : ""; //find audio clues button
         $("item[type=mp3player]").length ? document.querySelector("#clue_audioPlayer").checked = true : ""; //find audio clues mp3 player
         $("action[type=setImage]").length ? clue_image.checked = true : ""; //find image clues
+        delay.value = $("action[type=delay]").attr("secs"); //set value of delay
+
         //getLanguage($("item[type=sentenceButtons]").eq(0).text())
        
 
@@ -1128,7 +1144,7 @@ function updateTI(XML) {
         let clueText = quiz.querySelector(".ql-editor").innerHTML; //fetch text from quill because editor attached with clues field
         clueText = clueText.replace('<p>', '').replace('</p>', '').replace(/<p><br[\/]?><[\/]?p>/g, '').replace(/(&nbsp;|<br>|<br \/>)/gm, '').replace(/\>\s+\</g, '><'); //remove need <p> tags
         parseInt(i + 1) < 10 ? sound = `s00${i+1}` : sound = `s0${i+1}`;
-        document.getElementById("onCorrect_audio").checked == true ? (playAudio = `<action type="delay" secs="0.5"/><action type="playSound" wait="yes" file="${sound}.mp3"></action><action type="delay" secs="0.5"/>`) : playAudio = "";
+        document.getElementById("onCorrect_audio").checked == true ? (playAudio = `<action type="delay" secs="0.5"/><action type="playSound" wait="yes" file="${sound}.mp3"></action>`) : playAudio = "";
         document.getElementById("clue_audio").checked == true ? (clueAudio = `<item type="button" btn="${webInteractive?`btn-audio`:`Audio`}"><action type="playSound" file="${sound}.mp3" wait="no"></action></item><action type="playSound" file="${sound}.mp3" wait="no"></action>`) : "";
         document.getElementById("clue_audioPlayer").checked == true ? clueAudio = `<item type="mp3player" sym="mp3player_1" file="${sound}.mp3"/>` : "";
         document.getElementById("clue_image").checked == true ? (clueImage = `<action type="setImage" img="image-clue" src="image${i+1}.jpg"/>`) : clueImage = "";
@@ -1153,6 +1169,7 @@ function updateTI(XML) {
                                 </item>
                                 
                                 <action type="waitTest"/>${playAudio}
+                                <action type="delay" secs="${delay.value}"/>
                             </frame>
                         `;
         console.log(frameContent)
@@ -1171,3 +1188,5 @@ function updateTI(XML) {
     content = new XMLSerializer().serializeToString(template);;
     return content;
 } //end updateTI function
+
+//"electron": "^6.1.12",

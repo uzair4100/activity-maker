@@ -13,10 +13,10 @@ const isDev = require('electron-is-dev');
 app.on('ready', function() {
     //creat new window
     mainWindow = new BrowserWindow({
-        width: 1200,
-        minWidth: 930,
-        minHeight: 1020,
-        height: 1020,
+        width: 850,
+        minWidth: 850,
+        minHeight: 925,
+        height: 925,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
@@ -32,8 +32,10 @@ app.on('ready', function() {
 
     if (isDev) {
         mainWindow.webContents.openDevTools();
+    } else {
+        mainWindow.removeMenu();
     }
-    mainWindow.autoHideMenuBar = true;
+
 
     console.log('App loaded...');
 
@@ -54,7 +56,9 @@ app.on('ready', function() {
                      event.sender.send('chooseFile-selected', folders);
              })*/
         dialog.showOpenDialog(mainWindow, chooseFileOptions).then(filepaths => {
-            event.sender.send('chooseFile-selected', filepaths);
+            if (filepaths) {
+                event.sender.send('chooseFile-selected', filepaths);
+            }
             console.log(filepaths)
         })
     });
